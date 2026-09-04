@@ -15,7 +15,7 @@ codegen-units = 1
 strip = true
 
 [dependencies]
-windows = { version = "0.58", features = [
+windows = { version = "0.62", features = [
     "Foundation",
     "Graphics",
     "Graphics_Capture",
