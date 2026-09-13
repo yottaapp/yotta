@@ -51,7 +51,7 @@
     "@vue-flow/core": "^1.48.2",
     "@vue-flow/minimap": "^1.5.4",
     "@vueuse/core": "^14.4.0",
-    "@wailsio/runtime": "3.0.0-beta.5",
+    "@wailsio/runtime": "3.0.0-beta.20",
     "elkjs": "0.11.1",
     "markdown-it": "^14.2.0",
     "pinia": "^3.0.4",
