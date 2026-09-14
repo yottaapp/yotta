@@ -183,7 +183,7 @@ func automationInputSource(t *testing.T, builtins nodes.Builtins, slot string) [
 	started, _ := builtins.Definition(nodes.RunStartedNodeID)
 	typeText, _ := builtins.Definition(nodes.TypeTextNodeID)
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-automation-input","name":"Automation Input"},"revision":0,"entryGraph":"main",
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-automation-input","name":"Automation Input"},"revision":0,"entryGraph":"main",
 		"graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"type","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{"slot":%q},
@@ -199,7 +199,7 @@ func heldInputSource(t *testing.T, builtins nodes.Builtins, slot string) []byte 
 	hold, _ := builtins.Definition(nodes.HoldKeysNodeID)
 	release, _ := builtins.Definition(nodes.ReleaseHeldInputNodeID)
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-held-input","name":"Held Input"},"revision":0,"entryGraph":"main",
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-held-input","name":"Held Input"},"revision":0,"entryGraph":"main",
 		"graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"hold","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{"slot":%q},"bindings":{"keys":{"kind":"value","value":["CTRL"]}}},
@@ -219,7 +219,7 @@ func pointerPositionSource(t *testing.T, builtins nodes.Builtins, slot string) [
 	started, _ := builtins.Definition(nodes.RunStartedNodeID)
 	position, _ := builtins.Definition(nodes.GetPointerPositionNodeID)
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-pointer-position","name":"Pointer Position"},"revision":0,"entryGraph":"main",
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-pointer-position","name":"Pointer Position"},"revision":0,"entryGraph":"main",
 		"graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"position","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{"slot":%q},"bindings":{}}

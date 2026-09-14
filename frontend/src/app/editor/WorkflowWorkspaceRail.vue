@@ -44,6 +44,7 @@ const workspaceItems = computed<
     testId: string
   }>
 >(() => [
+  workspaceItem('settings', 'workflow.editor.settings', 'i-tabler-settings'),
   workspaceItem('graphs', 'workflow.graphs.manager', 'i-tabler-folders'),
   workspaceItem('variables', 'workflow.state_panel.title', 'i-tabler-variable'),
   workspaceItem('macro', 'assets.tabs.macros', 'i-tabler-list-details'),

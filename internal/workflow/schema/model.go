@@ -14,7 +14,7 @@ import (
 
 const (
 	Format            = "yotta.workflow"
-	Version           = "1"
+	Version           = "5"
 	SchemaPathVersion = "v" + Version
 	MaxRevision       = 9_007_199_254_740_991
 	MaxDiagnostics    = 10_000
@@ -34,8 +34,10 @@ const (
 )
 
 type WorkflowSource struct {
+	Targets                  []WorkflowTarget          `json:"targets,omitempty" jsonschema:"maxItems=64"`
+	ParameterBlocks          []ParameterBlock          `json:"parameterBlocks,omitempty" jsonschema:"maxItems=4096"`
 	Format                   string                    `json:"format" jsonschema:"required,enum=yotta.workflow"`
-	Version                  string                    `json:"version" jsonschema:"required,enum=1"`
+	Version                  string                    `json:"version" jsonschema:"required,enum=5"`
 	Workflow                 Workflow                  `json:"workflow" jsonschema:"required"`
 	DerivedFrom              *WorkflowReleaseOrigin    `json:"derivedFrom,omitempty"`
 	Revision                 int64                     `json:"revision" jsonschema:"required,minimum=0,maximum=9007199254740991"`
@@ -295,7 +297,8 @@ type EdgePresentation struct {
 }
 
 type Variable struct {
-	Name    string                  `json:"name" jsonschema:"required,maxLength=128,pattern=^[A-Za-z0-9_][A-Za-z0-9._-]*$"`
-	Type    datatype.TypeExpression `json:"type" jsonschema:"required"`
-	Default json.RawMessage         `json:"default" jsonschema:"required"`
+	Parameter *Parameter              `json:"parameter,omitempty"`
+	Name      string                  `json:"name" jsonschema:"required,maxLength=128,pattern=^[A-Za-z0-9_][A-Za-z0-9._-]*$"`
+	Type      datatype.TypeExpression `json:"type" jsonschema:"required"`
+	Default   json.RawMessage         `json:"default" jsonschema:"required"`
 }

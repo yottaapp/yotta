@@ -294,6 +294,7 @@ const props = defineProps<{
   typeChangeImpact: (name: string, type: TypeExpression) => StateTypeChangeImpact
 }>()
 const emit = defineEmits<{
+  parameters: []
   command: [command: EditorCommand]
   insert: [name: string, mode: StateReferenceMode]
   locate: [name: string]
@@ -415,6 +416,26 @@ function isNumericState(variable: Variable): boolean {
 
 function variableActions(variable: Variable) {
   const insertions = [
+    {
+      label: t('workflow.parameters.expose'),
+      icon: 'i-tabler-adjustments-horizontal',
+      onSelect: () => {
+        if (!variable.parameter)
+          emit('command', {
+            kind: 'update-state-variable',
+            name: variable.name,
+            type: cloneReactiveValue(variable.type),
+            defaultValue: cloneReactiveValue(variable.default),
+            parameter: {
+              id: crypto.randomUUID(),
+              label: variable.name,
+              control: 'auto',
+              order: props.variables.filter((v) => v.parameter).length,
+            },
+          })
+        emit('parameters')
+      },
+    },
     {
       label: t('workflow.state_panel.insert_last_change', { name: variable.name }),
       icon: 'i-tabler-history',

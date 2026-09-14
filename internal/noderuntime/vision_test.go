@@ -185,7 +185,7 @@ func visionMatchSource(builtins nodes.Builtins, frame, template blob.BlobRef) []
 	match, _ := builtins.Definition(nodes.MatchTemplateNodeID)
 	branch, _ := builtins.Definition(nodes.BranchNodeID)
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-vision-match","name":"Vision Match"},"revision":0,"entryGraph":"main",
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-vision-match","name":"Vision Match"},"revision":0,"entryGraph":"main",
 		"graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"match","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":1},"config":{},"bindings":{
@@ -208,7 +208,7 @@ func visionDualBarSource(builtins nodes.Builtins, frame blob.BlobRef) []byte {
 	track, _ := builtins.Definition(nodes.TrackDualColorBarNodeID)
 	branch, _ := builtins.Definition(nodes.BranchNodeID)
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-vision-dual-bar","name":"Vision Dual Bar"},"revision":0,"entryGraph":"main",
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-vision-dual-bar","name":"Vision Dual Bar"},"revision":0,"entryGraph":"main",
 		"graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"track","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":1},"config":{},"bindings":{

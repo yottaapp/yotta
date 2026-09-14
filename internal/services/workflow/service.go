@@ -28,6 +28,8 @@ import (
 
 type Service struct {
 	wallet            *walletSession
+	walletPageURL     string
+	walletPageBrowser nativeoidc.Browser
 	observation       *authoringcontext.Service
 	community         *communityclient.Client
 	application       *appcore.Application
@@ -202,13 +204,14 @@ type DeleteSourceResult struct {
 }
 
 type BundleInfoView struct {
-	Panels     []BundlePanelView `json:"panels"`
-	WorkflowID string            `json:"workflowId"`
-	Name       string            `json:"name"`
-	Revision   int64             `json:"revision"`
-	SourceHash artifact.Digest   `json:"sourceHash"`
-	BlobCount  int               `json:"blobCount"`
-	BlobBytes  int64             `json:"blobBytes"`
+	PublishedSourceHash artifact.Digest   `json:"publishedSourceHash"`
+	Panels              []BundlePanelView `json:"panels"`
+	WorkflowID          string            `json:"workflowId"`
+	Name                string            `json:"name"`
+	Revision            int64             `json:"revision"`
+	SourceHash          artifact.Digest   `json:"sourceHash"`
+	BlobCount           int               `json:"blobCount"`
+	BlobBytes           int64             `json:"blobBytes"`
 }
 
 type BundlePanelView struct {
@@ -680,7 +683,7 @@ func bundleInfoView(info workflowbundle.Info) BundleInfoView {
 	return BundleInfoView{
 		Panels:     panels,
 		WorkflowID: info.WorkflowID, Name: info.Name, Revision: info.Revision,
-		SourceHash: info.SourceHash, BlobCount: info.BlobCount, BlobBytes: info.BlobBytes,
+		PublishedSourceHash: info.PublishedSourceHash, SourceHash: info.SourceHash, BlobCount: info.BlobCount, BlobBytes: info.BlobBytes,
 	}
 }
 

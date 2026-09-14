@@ -1,1 +1,1 @@
-export * from '../v1/diagnostic'
+export * from '../v5/diagnostic'

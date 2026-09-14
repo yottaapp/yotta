@@ -1,3 +1,4 @@
+import { workflowTargetIssue } from '@/app/editor/workflowTargets'
 import { i18n } from '@/i18n'
 import type { WorkflowStartRunView } from '@/app/transport/workflow'
 
@@ -31,10 +32,20 @@ export type RunStartOutcome =
       toNodeId?: string
       toPortId?: string
       requirementId?: string
+      parameterLabel?: string
     }
 
 export function runStartOutcome(started: WorkflowStartRunView): RunStartOutcome {
   if (started.run) return { state: 'started', runId: started.run.runId }
+  const parameterIssue = started.diagnostics.find(
+    (item) => item.severity === 'error' && typeof item.params?.parameterLabel === 'string',
+  )
+  if (parameterIssue)
+    return {
+      state: 'workflow-invalid',
+      code: parameterIssue.code,
+      parameterLabel: String(parameterIssue.params?.parameterLabel),
+    }
   const readiness = started.readiness
   if (readiness && readiness.state !== 'started' && readiness.state !== 'failed') {
     return readinessOutcome(readiness)
@@ -73,6 +84,11 @@ export function runReadinessMessage(
 ): string {
   const t = i18n.global.t
   const te = i18n.global.te
+  if (outcome.parameterLabel)
+    return (
+      workflowTargetIssue(outcome.code ?? '', outcome.parameterLabel, t) ??
+      t('workflow.parameters.invalid', { name: outcome.parameterLabel })
+    )
   if (
     outcome.requirementId === 'model' &&
     (outcome.code === 'admission.target_unavailable' ||

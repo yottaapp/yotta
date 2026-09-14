@@ -28,7 +28,7 @@ func (s *proposalState) automationTarget(ctx context.Context, raw json.RawMessag
 	if err := json.Unmarshal(raw, &request); err != nil {
 		return nil, err
 	}
-	result, err := s.manager.observation.Describe(ctx, request.Slot)
+	result, err := s.manager.observation.DescribeWorkflow(ctx, s.workflowID, request.Slot)
 	if err != nil {
 		return nil, err
 	}

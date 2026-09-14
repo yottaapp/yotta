@@ -177,7 +177,13 @@ export function effectiveTargetSlot(
   const fieldID = target.slotConfigKey
   const override = fieldID ? node.config[fieldID] : undefined
   if (typeof override === 'string' && override) return override
-  return defaults.find((candidate) => candidate.target === target.targetSlot)?.slot ?? ''
+  return (
+    defaults.find((candidate) => candidate.target === target.targetSlot)?.slot ??
+    (target.targetSlot === 'application'
+      ? defaults.find((candidate) => candidate.target === 'target')?.slot
+      : '') ??
+    ''
+  )
 }
 
 function automationConfiguredTarget(
@@ -185,7 +191,13 @@ function automationConfiguredTarget(
 ): ConfiguredTargetProjection | undefined {
   return targets.find((target) =>
     target.targetKinds.some((kind) =>
-      ['desktop-window', 'win32-window', 'android-device', 'browser-cdp'].includes(kind),
+      [
+        'desktop-window',
+        'win32-window',
+        'android-device',
+        'browser-cdp',
+        'configured-application',
+      ].includes(kind),
     ),
   )
 }

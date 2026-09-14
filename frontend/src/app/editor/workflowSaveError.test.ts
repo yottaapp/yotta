@@ -95,3 +95,20 @@ describe('workflow save errors', () => {
     })
   })
 })
+
+it.each(['INVALID_TARGET', 'REFERENCE_IN_USE'])(
+  'projects %s to an actionable workflow settings error',
+  (code) => {
+    const failure = describeWorkflowSaveError(
+      new RPCError(
+        { id: code, category: 'validation' },
+        'workflow.applyPatch',
+        'target-operation',
+        null,
+      ),
+    )
+    expect(failure.kind).toBe('validation')
+    expect(failure.message).toContain('工作流设置')
+    expect(failure.message).not.toContain(code)
+  },
+)

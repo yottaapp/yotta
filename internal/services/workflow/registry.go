@@ -228,7 +228,7 @@ func (s *Service) InstallRegistryWorkflow(ctx context.Context, releaseID string)
 	if err != nil {
 		return SourceView{}, bundleError("registry_inspect", err)
 	}
-	if info.WorkflowID != release.WorkflowID || string(info.SourceHash) != release.SourceHash {
+	if info.WorkflowID != release.WorkflowID || string(info.PublishedSourceHash) != release.SourceHash {
 		return SourceView{}, registryError("identity", errors.New("release and bundle identity differ"))
 	}
 	request.Path = path

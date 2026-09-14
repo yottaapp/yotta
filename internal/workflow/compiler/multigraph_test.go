@@ -37,7 +37,7 @@ func TestCompilerExpandsTypedSubgraphIntoTheOnlySchedulerPath(t *testing.T) {
 		return fmt.Sprintf(`{"nodeTypeId":%q,"version":%q,"semanticDigest":%q}`, value.NodeTypeID, value.Version, value.SemanticDigest)
 	}
 	raw := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-multigraph","name":"Multigraph"},"revision":0,"entryGraph":"main",
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-multigraph","name":"Multigraph"},"revision":0,"entryGraph":"main",
 		"graphs":[
 			{"id":"main","kind":"main","nodes":[
 				{"id":"root","nodeRef":%s,"position":{"x":0,"y":0},"config":{},"bindings":{}},

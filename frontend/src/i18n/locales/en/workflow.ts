@@ -1,5 +1,90 @@
 export default {
   workflow: {
+    settings_panel: {
+      name_required: 'Enter a workflow name before saving.',
+      missing_binding:
+        '“{name}” is not configured. Select a device target on the workflow homepage or in Workflow settings on the left.',
+      invalid_binding:
+        'The device target for “{name}” is unavailable. Select another target in workflow configuration, or use Configure device targets to add one.',
+      wrong_kind:
+        'The target type for “{name}” does not match. Select a matching device target in workflow configuration.',
+      undeclared:
+        'A node refers to an undeclared target. Add a target in Workflow settings on the left, then select it on the node.',
+
+      no_local_target: 'No matching target is configured on this device.',
+      configure_local: 'Configure device targets',
+      snippet_target: 'Target for {name}',
+      clear_binding: 'Clear device binding',
+      basic: 'Basic information',
+      targets: 'Run targets',
+      add: 'Add target',
+      name: 'Target name',
+      description: 'Description',
+      kind: 'Target type',
+      automation: 'Automation target',
+      application: 'Launch application',
+      default: 'Default target',
+      make_default: 'Set as default',
+      binding: 'Target on this device',
+      unbound: 'Not configured',
+      local_hint:
+        'Only targets used by this workflow need a binding. Target names travel with the workflow; device selections stay on this device.',
+      referenced: 'This target is used by nodes. Change their references first.',
+      missing: 'Add a matching run target in workflow settings.',
+      save_bindings: 'Save device bindings',
+      saved: 'Device bindings saved',
+      target_name: 'Target {number}',
+    },
+
+    parameters: {
+      source_changed:
+        'The workflow parameters have changed. Your edits are preserved; reload to use the latest configuration.',
+      reload: 'Reload',
+      discard_reload: 'Discard changes and reload',
+
+      text_block: 'Text heading',
+      separator: 'Separator',
+      text_placeholder: 'Enter text, or leave empty for spacing',
+
+      visible_when: 'Visibility',
+      always_visible: 'Always visible',
+      when_enabled: 'When “{name}” is enabled',
+      minimum: 'Minimum',
+      maximum: 'Maximum',
+      required: 'Required',
+      title: 'Exposed parameters',
+      run_title: 'Workflow parameters',
+      author_hint:
+        'Expose variables on the workflow home so users can configure them before running.',
+      choose_variable: 'Choose a variable',
+      expose: 'Expose parameter',
+      empty_author:
+        'Create variables first, then choose which inputs to expose. Read those variables in the workflow to use their values.',
+      move_up: 'Move parameter up',
+      move_down: 'Move parameter down',
+      unexpose: 'Remove exposure',
+      label: 'Display name',
+      description: 'Description',
+      group: 'Group',
+      control: 'Control',
+      auto: 'Use variable type',
+      select: 'Single selection',
+      multiselect: 'Multiple selection',
+      option_label: 'Option label',
+      option_value: 'Stored value',
+      remove_option: 'Remove option',
+      add_option: 'Add option',
+      default: 'Author default',
+      run_hint:
+        'Configuration is saved on this device and applied at startup. Changes during a run affect the next run.',
+      empty_run: 'The author has not exposed any parameters.',
+      saved: 'Saved for the next run.',
+      reset: 'Restore defaults',
+      discard: 'Discard changes',
+      save_run: 'Save and run',
+      invalid:
+        'The value for “{name}” is invalid. Check its type, range, or select an available option.',
+    },
     checkout: {
       wallet_method: 'Wallet balance',
       wallet_balance: 'Balance ¥{amount}',
@@ -385,6 +470,10 @@ export default {
       metadata_save_blocked:
         'The workflow still contains an invalid field. Fix the node configuration before saving workflow details.',
       save_error: {
+        INVALID_TARGET:
+          'Run targets could not be saved. Open Workflow settings on the left, check target names and types, and keep one default target.',
+        REFERENCE_IN_USE:
+          'This item is still referenced by the workflow. Update the nodes using it before deleting it. Manage run targets in Workflow settings on the left.',
         INVALID_FIELD:
           'The workflow does not satisfy the save rules. Check the node fields or connection you just changed, then try again.',
         MISSING_REQUIRED_FIELD:

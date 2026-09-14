@@ -53,7 +53,7 @@ func TestSourceStoreRequiresExplicitRevisionCASAndReopensCanonicalArtifact(t *te
 func TestSourceStoreRejectsInvalidAndExternallyChangedSources(t *testing.T) {
 	repository := testWorkflowRepository(t)
 	store := openTestSourceStore(t, repository, 2)
-	if _, err := store.Save(context.Background(), []byte(`{"format":"yotta.workflow","version":"3"}`), -1); err == nil {
+	if _, err := store.Save(context.Background(), []byte(`{"format":"yotta.workflow","version":"5"}`), -1); err == nil {
 		t.Fatal("legacy Source was accepted")
 	}
 	if _, err := store.Save(context.Background(), concatSource(t, 0, "a", "b"), -1); err != nil {
@@ -107,7 +107,7 @@ func TestSourceStoreDeleteRequiresExactRevisionAndHash(t *testing.T) {
 
 func TestSourceStoreIsolatesRepairsAndDeletesOneCorruptSource(t *testing.T) {
 	repository := testWorkflowRepository(t)
-	corrupt := []byte(`{"format":"yotta.workflow","version":"1",`)
+	corrupt := []byte(`{"format":"yotta.workflow","version":"5",`)
 	recoveryID := testDigest(t, "corrupt-workflow-source")
 	err := repository.PutQuarantine(context.Background(), catalog.WorkflowQuarantineRecord{
 		ID: recoveryID, OriginalName: "wf-store.json", Reason: "invalid JSON",
@@ -371,7 +371,7 @@ func concatSource(t *testing.T, revision int, a, b string) []byte {
 	}
 	ref := builtins.ConcatContract.NodeRef()
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-store","name":"Store"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-store","name":"Store"},
 		"revision":%d,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"concat","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			 "bindings":{"a":{"kind":"value","value":%q},"b":{"kind":"value","value":%q}}}

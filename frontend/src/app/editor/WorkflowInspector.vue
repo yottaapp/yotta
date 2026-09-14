@@ -211,7 +211,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from 'vue'
+import { WORKFLOW_TARGETS } from './workflowTargets'
+const workflowTargets = inject(WORKFLOW_TARGETS, undefined)
+import { inject, computed, defineAsyncComponent, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type {
   TargetDefault,
@@ -281,7 +283,9 @@ const surface = computed(() =>
 )
 const targetSlot = computed(() =>
   props.projection && props.node
-    ? effectiveTargetSlot(props.projection, props.node, props.targetDefaults)
+    ? (workflowTargets?.resolve(
+        effectiveTargetSlot(props.projection, props.node, props.targetDefaults),
+      ) ?? effectiveTargetSlot(props.projection, props.node, props.targetDefaults))
     : '',
 )
 

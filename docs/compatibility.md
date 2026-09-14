@@ -58,7 +58,7 @@ Yotta 尚未发布稳定版。`internal/` Go API、Wails RPC、节点实现接�
 | Schedule | `internal/services/schedule.Store` 链式读取 v1 → v2 → v3 → v4 → v5；全部文件先解析、迁移和校验，再以 crash-atomic 文件替换持久写回 |
 | Macro | `internal/services/macro` 严格读取 v1 carrier，迁成 v2；Service 成功读取后用 Blob record CAS 发布新的 canonical carrier |
 | settings | envelope 仍是 `yotta.settings/1`；兼容 reader 只删除明确登记的 `workflowConsent`、`allowPrivateNetwork` 和 `executableDigest` retired fields，并立刻保存为新的 generation |
-| Workflow Source format | `internal/workflowstore.currentSourceMigrationPlan` 已建立相邻 migration registry，但当前没有旧 format/version step；非当前合同会进入 recovery/quarantine，而不是猜测读取 |
+| Workflow Source format | `internal/workflowstore` 显式读取 v1、v2、v3、v4 并迁移到 v5；v2 增加对外参数，v3 增加独立展示块，v4 增加标题说明，v5 增加工作流运行目标声明。保留作者默认值与稳定参数/目标 ID，本机参数和目标绑定独立存储，不进入发布包；本地旧目标引用迁移时先保留本机绑定，再通过 strict validation 和原 Source CAS 发布 |
 | Workflow NodeRef | Source Store 打开时只应用 `internal/workflow/authoring` 已登记且 reducer 能证明兼容的 contract upgrade；先对全部 Source preflight，再通过 Catalog revision CAS 持久发布，失败时不留下半迁移集合 |
 | Workflow Bundle | v1 manifest 可升级为 v2；导入时先校验归档 Source，再进入与本地 Source 相同的 migration seam，不维护第二套节点升级逻辑 |
 | Snippet NodeRef | Snippet 读取/保存时复用 Workflow Authoring 的 detached-node migration；成功后保持用户时间戳并原子写回，关闭并重开仍是当前 NodeRef |

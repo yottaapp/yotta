@@ -24,7 +24,7 @@ func TestRecordedRandomAndTimeUseHostFactsAndPersistActions(t *testing.T) {
 	timeDefinition, _ := builtins.Definition(nodes.ObserveTimeNodeID)
 	randomRef, timeRef := randomDefinition.Contract.NodeRef(), timeDefinition.Contract.NodeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-observations","name":"Observations"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-observations","name":"Observations"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"random","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			 "bindings":{"minimum":{"kind":"value","value":10},"maximum":{"kind":"value","value":20},"distribution":{"kind":"value","value":"uniform"}}},
@@ -75,7 +75,7 @@ func TestEntropyFailureIsADeclaredRecordedRunFailure(t *testing.T) {
 	definition, _ := builtins.Definition(nodes.RandomBooleanNodeID)
 	ref := definition.Contract.NodeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-entropy-failure","name":"Entropy failure"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-entropy-failure","name":"Entropy failure"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[{
 			"id":"random","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			"bindings":{"probability":{"kind":"value","value":0.5}}

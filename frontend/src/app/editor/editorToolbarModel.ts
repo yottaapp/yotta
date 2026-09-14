@@ -268,7 +268,7 @@ export function buildEditorToolbarModel(context: EditorToolbarContext): EditorTo
     tools: [
       [action('toggle-inspector', { active: context.inspectorOpen })],
       executionTools,
-      [action('settings'), action('reload')],
+      [action('reload')],
     ],
     recordingStatusKey,
     toolsNeedAttention: context.diagnosticCount > 0,

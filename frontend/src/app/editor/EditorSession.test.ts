@@ -2614,7 +2614,7 @@ function subgraphLifecycleSource(): YottaWorkflowSource {
 function emptySource(): YottaWorkflowSource {
   return {
     format: 'yotta.workflow',
-    version: '1',
+    version: '5',
     workflow: { id: 'workflow_test', name: 'Test workflow' },
     revision: 0,
     entryGraph: 'main',
@@ -2681,6 +2681,7 @@ function mockTransport(saved: SourceView, run: RunView): WorkflowTransport {
       name: saved.name,
       revision: saved.revision,
       sourceHash: saved.sourceHash,
+      publishedSourceHash: saved.sourceHash,
       blobCount: 0,
       blobBytes: 0,
     })),
@@ -2690,6 +2691,7 @@ function mockTransport(saved: SourceView, run: RunView): WorkflowTransport {
       name: saved.name,
       revision: saved.revision,
       sourceHash: saved.sourceHash,
+      publishedSourceHash: saved.sourceHash,
       blobCount: 0,
       blobBytes: 0,
     })),
@@ -2755,3 +2757,70 @@ function mockTransport(saved: SourceView, run: RunView): WorkflowTransport {
     installRegistryWorkflow: vi.fn(async () => saved),
   }
 }
+
+describe('cross-workflow insertion targets', () => {
+  it('groups foreign target IDs into declarations atomically and keeps compatible IDs', async () => {
+    const source = emptySource()
+    source.targets = [{ id: 'destination', name: 'Destination', kind: 'automation', default: true }]
+    source.targetDefaults = [{ target: 'target', slot: 'destination' }]
+    const session = new EditorSession(mockTransport(sourceView(source), runView('QUEUED')))
+    await session.load(source.workflow.id)
+    const before = JSON.stringify(session.source)
+    const nodes = ['foreign-a', 'foreign-a', 'foreign-b', 'destination'].map((slot, index) => ({
+      id: `copy-${index}`,
+      nodeRef: clickPointer.nodeRef,
+      position: { x: index * 30, y: 0 },
+      config: { slot },
+      bindings: {},
+    }))
+    const inserted = session.insertNodeSelection({ nodes, edges: [] }, { x: 100, y: 100 })
+    const roles = inserted.map(
+      (id) => session.currentGraph!.nodes.find((node) => node.id === id)!.config.slot,
+    )
+    expect(roles[0]).toBe(roles[1])
+    expect(roles[2]).not.toBe(roles[0])
+    expect(roles[3]).toBe('destination')
+    expect(session.source!.targets).toHaveLength(3)
+    expect(
+      roles.slice(0, 3).every((id) => session.source!.targets!.some((target) => target.id === id)),
+    ).toBe(true)
+    expect(JSON.stringify(session.source)).not.toContain('foreign-a')
+    expect(JSON.stringify(nodes)).toContain('foreign-a')
+    session.undo()
+    const restored = JSON.parse(before)
+    restored.revision = session.source!.revision
+    expect(session.source).toEqual(restored)
+    session.redo()
+    expect(session.source!.targets).toHaveLength(3)
+  })
+  it('leaves declarations and nodes untouched when pasted topology is invalid', async () => {
+    const source = emptySource()
+    source.targets = [{ id: 'destination', name: 'Destination', kind: 'automation', default: true }]
+    const session = new EditorSession(mockTransport(sourceView(source), runView('QUEUED')))
+    await session.load(source.workflow.id)
+    const before = JSON.stringify(session.source)
+    const nodes = ['one', 'two'].map((id) => ({
+      id,
+      nodeRef: clickPointer.nodeRef,
+      position: { x: 0, y: 0 },
+      config: { slot: 'physical-or-foreign' },
+      bindings: {},
+    }))
+    expect(() =>
+      session.insertNodeSelection(
+        {
+          nodes,
+          edges: [
+            {
+              channel: 'exec',
+              from: { nodeId: 'one', portId: 'missing' },
+              to: { nodeId: 'two', portId: 'missing' },
+            },
+          ],
+        },
+        { x: 0, y: 0 },
+      ),
+    ).toThrow()
+    expect(JSON.stringify(session.source)).toBe(before)
+  })
+})

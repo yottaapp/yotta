@@ -100,6 +100,7 @@ type EvidenceRef struct {
 }
 
 type Info struct {
+	PublishedSourceHash        artifact.Digest          `json:"publishedSourceHash"`
 	Panels                     []panel.PortableResource `json:"panels,omitempty"`
 	WorkflowID                 string                   `json:"workflowId"`
 	Name                       string                   `json:"name"`
@@ -650,8 +651,9 @@ func sourceInfo(
 		bytes += ref.Size
 	}
 	return Info{
-		Panels:     manifest.Panels,
-		WorkflowID: document.Workflow.ID, Name: document.Workflow.Name, Revision: document.Revision, SourceHash: digest,
+		PublishedSourceHash: manifest.SourceHash,
+		Panels:              manifest.Panels,
+		WorkflowID:          document.Workflow.ID, Name: document.Workflow.Name, Revision: document.Revision, SourceHash: digest,
 		ResourceCount: len(document.Resources), TargetProfileCount: len(document.TargetProfileDefinitions),
 		CredentialRequirementCount: len(document.CredentialRequirements), DependencyCount: len(document.Dependencies),
 		BlobCount: len(seen), BlobBytes: bytes,

@@ -29,7 +29,7 @@
       <WorkflowEditorToolbar
         :name="session.source.workflow.name"
         :revision="session.baseRevision"
-        :dirty="session.dirty"
+        :dirty="session.dirty || metadataDirty || targetBindingsDirty"
         :context="editorToolbarContext"
         @back="router.push('/workflows')"
         @command="handleEditorToolbarCommand"
@@ -61,18 +61,6 @@
         color="warning"
         :title="t('panels.legacy_title')"
         :description="t('panels.legacy_hint')"
-      />
-
-      <WorkflowMetadataDialog
-        v-model:open="workflowSettingsOpen"
-        :workflow-id="session.workflowId"
-        :name="workflowMetadata.name"
-        :description="workflowMetadata.description"
-        :category="workflowMetadata.category"
-        :tags="workflowMetadata.tags"
-        :busy="workflowSettingsBusy"
-        :error="workflowSettingsError"
-        @submit="editorMetadata.save"
       />
 
       <div
@@ -138,8 +126,9 @@
         />
 
         <aside
-          v-if="workspaceSidebarOpen"
+          v-show="workspaceSidebarOpen"
           data-testid="workflow-workspace-sidebar"
+          ref="workspaceRoot"
           class="relative flex shrink-0 flex-col border-r border-default bg-default"
           :style="{ width: `${workspaceSidebarWidth}px` }"
         >
@@ -178,6 +167,7 @@
             :types="session.authoring?.body.types ?? []"
             :references="stateReferenceLocations"
             :type-change-impact="stateTypeChangeImpact"
+            @parameters="openWorkflowSettings()"
             @command="applyCommand"
             @insert="insertStateReferenceAtCenter"
             @locate="locateStateReference"
@@ -185,12 +175,34 @@
             @close="workspaceSidebarOpen = false"
           />
           <WorkflowPathDock
-            :source="session.source"
             v-else-if="workspacePanel === 'path'"
+            :source="session.source"
             @use="useWorkspaceResource"
           />
+          <WorkflowSettingsPanel
+            :key="`${session.workflowId}:${metadataResetGeneration}`"
+            v-show="workspacePanel === 'settings'"
+            :workflow-id="session.workflowId"
+            :workflow-metadata="workflowMetadata"
+            :workflow-settings-busy="workflowSettingsBusy"
+            :workflow-settings-error="workflowSettingsError"
+            :workflow-targets="workflowTargets"
+            :graphs="session.source.graphs"
+            :target-binding-draft="targetBindingDraft"
+            :target-bindings-dirty="targetBindingsDirty"
+            :target-bindings-busy="targetBindingsBusy"
+            :target-bindings-error="targetBindingsError"
+            :variables="session.source.variables"
+            :blocks="session.source.parameterBlocks"
+            :types="session.authoring.body.types"
+            @metadata="editorRuns.execute({ kind: 'save' })"
+            @metadata-draft="metadataDraft = $event"
+            @command="applyCommand"
+            @binding="(key, value) => (targetBindingDraft[key] = value)"
+            @save-bindings="saveTargetBindings"
+          />
           <WorkflowResourceDock
-            v-else-if="workspaceResourcePanel"
+            v-if="workspaceResourcePanel"
             :kind="workspaceResourceKind"
             :source="session.source"
             :recording-phase="recording.state.phase"
@@ -343,7 +355,7 @@
             v-if="aiPanelOpen"
             :workflow-id="session.workflowId"
             :base-revision="session.baseRevision"
-            :dirty="session.dirty"
+            :dirty="session.dirty || metadataDirty || targetBindingsDirty"
             :run-id="session.activeRun?.runId"
             @close="aiPanelOpen = false"
             @accepted="acceptAIProposal"
@@ -536,16 +548,25 @@ import {
 import { useConfirm } from '@/composables/useConfirm'
 import { useRecordingStart } from '@/composables/useRecordingStart'
 import { useRecordingStartFeedback } from '@/composables/useRecordingStartFeedback'
+import WorkflowSettingsPanel from '@/app/editor/WorkflowSettingsPanel.vue'
+import { WORKFLOW_TARGETS, targetValueKey, workflowTargetIssue } from '@/app/editor/workflowTargets'
+import { parameterTransport } from '@/app/transport/workflow'
 import { effectiveTargetSlot } from '@/app/editor/authoringSurface'
 import WorkflowEditorToolbar from '@/app/editor/WorkflowEditorToolbar.vue'
 import WorkflowWorkspaceRail from '@/app/editor/WorkflowWorkspaceRail.vue'
 import { createEditorRunController } from '@/app/editor/EditorRunController'
-import { useInspectorPersistence } from '@/app/editor/useInspectorPersistence'
+import {
+  useInspectorPersistence,
+  commitActiveInspectorInput,
+} from '@/app/editor/useInspectorPersistence'
 import { createEditorResourceController } from '@/app/editor/EditorResourceController'
 import { createEditorRecordingController } from '@/app/editor/EditorRecordingController'
 import { createEditorCanvasLayoutController } from '@/app/editor/EditorCanvasLayoutController'
 import { createEditorSelectionController } from '@/app/editor/EditorSelectionController'
-import { createEditorWorkflowMetadataController } from '@/app/editor/EditorWorkflowMetadataController'
+import {
+  createEditorWorkflowMetadataController,
+  type WorkflowMetadataDraft,
+} from '@/app/editor/EditorWorkflowMetadataController'
 import type { EditorToolbarCommand, EditorToolbarContext } from '@/app/editor/editorToolbarModel'
 import { useEditorPanelLayout } from '@/app/editor/useEditorPanelLayout'
 import {
@@ -624,9 +645,6 @@ const WorkflowStatePanel = defineAsyncComponent(() => import('@/app/editor/Workf
 const WorkflowRecordingDialogs = defineAsyncComponent(
   () => import('@/app/editor/WorkflowRecordingDialogs.vue'),
 )
-const WorkflowMetadataDialog = defineAsyncComponent(
-  () => import('@/app/editor/WorkflowMetadataDialog.vue'),
-)
 const AIWorkflowReviewPanel = defineAsyncComponent(
   () => import('@/app/editor/AIWorkflowReviewPanel.vue'),
 )
@@ -660,6 +678,7 @@ const editorResources = createEditorResourceController({
   showError,
 })
 const selectedNodeId = ref('')
+const workspaceRoot = ref<HTMLElement | null>(null)
 const inspectorRoot = ref<HTMLElement | null>(null)
 const selectedNodeIds = ref(new Set<string>())
 const selectedEdgeIds = ref(new Set<string>())
@@ -735,7 +754,11 @@ const {
 } = runtimeWorkbench
 const editorRuns = createEditorRunController({
   session,
-  commitInputs: () => inspectorPersistence.commit(),
+  commitInputs: () => {
+    commitActiveInspectorInput(workspaceRoot.value)
+    return inspectorPersistence.commit()
+  },
+  persistLocalConfiguration: flushEditorConfiguration,
   translate: (key, params) => (params ? t(key, params) : t(key)),
   showError,
   showSuccess,
@@ -766,16 +789,147 @@ const editorMetadata = createEditorWorkflowMetadataController({
     updateSourceMetadata: (workflowId, baseRevision, draft) =>
       workflowTransport.updateSourceMetadata(workflowId, baseRevision, draft),
   },
-  saveCurrent: async () => (await editorRuns.execute({ kind: 'save' })).ok,
+  saveCurrent: async () => {
+    await session.save()
+    return true
+  },
   translate: (key) => t(key),
   describeError: errorMessage,
 })
 const {
-  dialogOpen: workflowSettingsOpen,
   busy: workflowSettingsBusy,
   error: workflowSettingsError,
   metadata: workflowMetadata,
 } = editorMetadata
+const metadataResetGeneration = ref(0)
+const metadataDraft = ref<WorkflowMetadataDraft | null>(null)
+const metadataDirty = computed(
+  () =>
+    metadataDraft.value !== null &&
+    JSON.stringify(metadataDraft.value) !== JSON.stringify({ ...workflowMetadata }),
+)
+async function flushEditorConfiguration(): Promise<boolean> {
+  await nextTick()
+  if (metadataDirty.value && metadataDraft.value) {
+    if (!metadataDraft.value.name.trim()) {
+      workflowSettingsError.value = t('workflow.settings_panel.name_required')
+      openWorkflowSettings()
+      return false
+    }
+    if (!(await editorMetadata.save({ ...metadataDraft.value }))) {
+      openWorkflowSettings()
+      return false
+    }
+    metadataDraft.value = { ...workflowMetadata, tags: [...workflowMetadata.tags] }
+  }
+  return flushTargetBindings()
+}
+const workflowTargets = computed(() => session.source?.targets ?? [])
+const targetBindingDraft = ref<Record<string, unknown>>({})
+const targetBindingConfirmed = ref<Record<string, unknown>>({})
+const targetBindingsBusy = ref(false)
+const targetBindingsError = ref('')
+const targetBindingsDirty = computed(
+  () => JSON.stringify(targetBindingDraft.value) !== JSON.stringify(targetBindingConfirmed.value),
+)
+let targetBindingGeneration = 0
+function resolveLocalTarget(id: string): string {
+  return workflowTargets.value.some((target) => target.id === id)
+    ? String(targetBindingConfirmed.value[targetValueKey(id)] ?? '')
+    : id
+}
+function openWorkflowSettings() {
+  workspacePanel.value = 'settings'
+  workspaceSidebarOpen.value = true
+}
+provide(WORKFLOW_TARGETS, {
+  targets: workflowTargets,
+  resolve: resolveLocalTarget,
+  openSettings: openWorkflowSettings,
+})
+let metadataWorkflowID = ''
+watch(
+  () => [workspacePanel.value, session.workflowId, Boolean(session.source)] as const,
+  ([panel, id, ready]) => {
+    if (panel === 'settings' && id && ready && metadataWorkflowID !== id) {
+      metadataWorkflowID = id
+      void editorMetadata.open()
+    }
+  },
+)
+watch(
+  () => session.workflowId,
+  async (id) => {
+    const current = ++targetBindingGeneration
+    targetBindingDraft.value = {}
+    targetBindingConfirmed.value = {}
+    targetBindingsError.value = ''
+    if (!id) return
+    targetBindingsBusy.value = true
+    try {
+      const configuration = await parameterTransport.get(id)
+      if (current !== targetBindingGeneration) return
+      const values = Object.fromEntries(
+        Object.entries(configuration.values ?? {}).filter(([key]) => key.startsWith('@target/')),
+      )
+      targetBindingDraft.value = { ...values }
+      targetBindingConfirmed.value = { ...values }
+    } catch (cause) {
+      if (current === targetBindingGeneration) targetBindingsError.value = errorMessage(cause)
+    } finally {
+      if (current === targetBindingGeneration) targetBindingsBusy.value = false
+    }
+  },
+  { immediate: true },
+)
+async function saveTargetBindings() {
+  await editorRuns.execute({ kind: 'save' })
+}
+async function flushTargetBindings(): Promise<boolean> {
+  if (!targetBindingsDirty.value) return true
+  if (targetBindingsBusy.value) return false
+  const id = session.workflowId,
+    generation = targetBindingGeneration
+  targetBindingsBusy.value = true
+  targetBindingsError.value = ''
+  try {
+    await session.save()
+    if (generation !== targetBindingGeneration) return false
+    const bindings = Object.fromEntries(
+      workflowTargets.value.map((target) => [
+        target.id,
+        String(targetBindingDraft.value[targetValueKey(target.id)] ?? ''),
+      ]),
+    )
+    const diagnostics = await parameterTransport.saveTargetBindings(
+      id,
+      session.baseRevision,
+      bindings,
+    )
+    if (generation !== targetBindingGeneration) return false
+    const problem = diagnostics?.find((diagnostic) => diagnostic.severity === 'error')
+    if (problem) {
+      targetBindingsError.value =
+        workflowTargetIssue(problem.code, String(problem.params?.parameterLabel ?? ''), t) ??
+        t('workflow.parameters.invalid', {
+          name: String(problem.params?.parameterLabel ?? ''),
+        })
+      openWorkflowSettings()
+      return false
+    }
+    targetBindingConfirmed.value = Object.fromEntries(
+      Object.entries(bindings).map(([key, value]) => [targetValueKey(key), value]),
+    )
+    targetBindingDraft.value = { ...targetBindingConfirmed.value }
+    return true
+  } catch (cause) {
+    openWorkflowSettings()
+    if (generation === targetBindingGeneration) targetBindingsError.value = errorMessage(cause)
+    return false
+  } finally {
+    if (generation === targetBindingGeneration) targetBindingsBusy.value = false
+  }
+}
 const editorToolbarContext = computed<Omit<EditorToolbarContext, 'dirty'>>(() => ({
   canUndo: session.canUndo,
   canRedo: session.canRedo,
@@ -857,6 +1011,7 @@ const snippetAuthoring = useWorkflowSnippetAuthoring({
   canvasElement,
   screenToFlowCoordinate,
   selectInsertedNodes,
+  showTargetSetup: openWorkflowSettings,
   showSnippetPanel: () => {
     workspacePanel.value = 'snippets'
     workspaceSidebarOpen.value = true
@@ -1402,7 +1557,8 @@ const editorRecording = createEditorRecordingController({
     invocation: recording.invocation,
   }),
   targets: () => recordingTargetItems.value,
-  selectedTargetSlot: () => selectedNode.value?.config.slot,
+  selectedTargetSlot: () =>
+    resolveLocalTarget(String(selectedNode.value?.config.slot ?? workflowDefaultTargetSlot.value)),
   importResource: (resource) => importWorkflowResource(resource),
   translate: (key) => t(key),
   showError,
@@ -1413,10 +1569,7 @@ const workflowDefaultTargetSlot = computed(
   () => session.source?.targetDefaults?.find((item) => item.target === 'target')?.slot ?? '',
 )
 const workflowAutomationTargetItems = computed(() =>
-  (settings.data?.automation.targets ?? []).map((target) => ({
-    label: `${target.label} · ${target.slot}`,
-    value: target.slot,
-  })),
+  workflowTargets.value.map((target) => ({ label: target.name, value: target.id })),
 )
 const workflowDefaultTargetLabel = computed(
   () =>
@@ -1432,6 +1585,7 @@ const resourceAuthoring = useWorkflowResourceAuthoring({
   selectedNodeId,
   selectedNodeIds,
   defaultTargetSlot: workflowDefaultTargetSlot,
+  resolveTargetSlot: resolveLocalTarget,
   recordingTargetSlot: () => recordingEditor.targetSlot,
   recordingTargetItems,
   screenToFlowCoordinate,
@@ -1480,18 +1634,30 @@ const selectedConnectedInputIDs = computed<ReadonlySet<string>>(() =>
 )
 
 function targetSlotForNode(node: Node, projection: NodeProjection): string {
-  return effectiveTargetSlot(projection, node, session.source?.targetDefaults ?? [])
+  return resolveLocalTarget(
+    effectiveTargetSlot(projection, node, session.source?.targetDefaults ?? []),
+  )
 }
 
 function setWorkflowDefaultTarget(value: unknown): void {
-  session.setTargetDefault('target', typeof value === 'string' ? value : '')
+  if (typeof value !== 'string' || !workflowTargets.value.some((target) => target.id === value))
+    return
+  applyCommand({
+    kind: 'set-workflow-targets',
+    targets: workflowTargets.value.map((target) => ({ ...target, default: target.id === value })),
+  })
 }
 
 // Serialize updates so delayed RPC completion cannot restore an older editor state.
 let editorContextUpdate = Promise.resolve()
 watch(
   () =>
-    [editorViewActive.value, session.workflowId, session.currentGraph?.id, session.dirty] as const,
+    [
+      editorViewActive.value,
+      session.workflowId,
+      session.currentGraph?.id,
+      session.dirty || metadataDirty.value || targetBindingsDirty.value,
+    ] as const,
   ([active, workflowId, graphId, dirty]) => {
     editorContextUpdate = editorContextUpdate
       .then(() =>
@@ -1589,6 +1755,7 @@ const unregisterMainWindowCloseGuard = registerMainWindowCloseGuard(confirmEdito
 async function confirmEditorExit(
   closeRequest?: MainWindowCloseRequest,
 ): Promise<boolean | 'handled'> {
+  commitActiveInspectorInput(workspaceRoot.value)
   return inspectorPersistence.decideExit((inputsValid) =>
     decideEditorExit(inputsValid, closeRequest),
   )
@@ -1625,7 +1792,8 @@ async function decideEditorExit(
     closeRequest?.setStage('stopping')
     if (!(await editorRecording.execute({ kind: 'discard' }))) return false
   }
-  if (!session.dirty && inputsValid) return true
+  if (!session.dirty && !metadataDirty.value && !targetBindingsDirty.value && inputsValid)
+    return true
   const decision = await confirm({
     title: t('workflow.editor.leave_title'),
     description: t('workflow.editor.leave_confirm'),
@@ -1641,7 +1809,10 @@ async function decideEditorExit(
     try {
       closeRequest?.setStage('restoring')
       await nextTick()
+      metadataDraft.value = { ...workflowMetadata, tags: [...workflowMetadata.tags] }
       session.discardDraft()
+      targetBindingDraft.value = { ...targetBindingConfirmed.value }
+      targetBindingsError.value = ''
       if (closeRequest) {
         await closeRequest.close()
         return 'handled'
@@ -1967,7 +2138,7 @@ function handleEditorToolbarCommand(command: EditorToolbarCommand): void {
       void editorRuns.execute({ kind: 'save' })
       return
     case 'settings':
-      void editorMetadata.open()
+      openWorkflowSettings()
       return
     case 'reload':
       void reloadWorkflow()
@@ -1975,7 +2146,7 @@ function handleEditorToolbarCommand(command: EditorToolbarCommand): void {
 }
 
 async function reloadWorkflow(): Promise<void> {
-  if (session.dirty) {
+  if (session.dirty || metadataDirty.value || targetBindingsDirty.value) {
     const accepted = await confirm({
       title: t('workflow.editor.discard_title'),
       description: t('workflow.editor.discard_confirm'),
@@ -1986,6 +2157,15 @@ async function reloadWorkflow(): Promise<void> {
   }
   try {
     await session.load(session.workflowId)
+    targetBindingDraft.value = { ...targetBindingConfirmed.value }
+    targetBindingsError.value = ''
+    metadataResetGeneration.value++
+    metadataDraft.value = null
+    metadataWorkflowID = ''
+    if (workspacePanel.value === 'settings') {
+      metadataWorkflowID = session.workflowId
+      await editorMetadata.open()
+    }
     selectedNodeId.value = ''
     selectedNodeIds.value = new Set()
     selectedEdgeId.value = ''

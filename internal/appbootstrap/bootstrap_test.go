@@ -105,7 +105,7 @@ func TestBuildComposesWorkflowServiceThroughProductionProgramChain(t *testing.T)
 		t.Fatalf("GetAuthoringProjection = %s", authoring)
 	}
 	created, err := service.CreateSource(" Empty ")
-	if err != nil || created.Name != "Empty" || created.Revision != 0 || !strings.Contains(created.SourceJSON, `"version":"1"`) {
+	if err != nil || created.Name != "Empty" || created.Revision != 0 || !strings.Contains(created.SourceJSON, `"version":"5"`) {
 		t.Fatalf("CreateSource = %#v, %v", created, err)
 	}
 	started, err := service.StartRun(saved.WorkflowID)
@@ -176,7 +176,7 @@ func TestBuildStartsWithOneCorruptWorkflowSourceIsolatedAndRepairable(t *testing
 	); err != nil {
 		t.Fatal(err)
 	}
-	corrupt := []byte(`{"format":"yotta.workflow","version":"1",`)
+	corrupt := []byte(`{"format":"yotta.workflow","version":"5",`)
 	recoveryID, err := artifact.Sum("yotta/test/workflow-quarantine/v1", corrupt)
 	if err != nil {
 		t.Fatal(err)
@@ -277,12 +277,15 @@ func TestRuntimeHotReplacesApplicationAutomationAndAuthoringGeneration(t *testin
 	}
 	patched, err := service.ApplyPatch(source.WorkflowID, source.Revision, []authoring.Command{
 		{Kind: authoring.CommandAddNode, AddNode: &authoring.AddNodeCommand{GraphID: "main", NodeTypeID: nodes.PressKeysNodeID, Handle: "keys", Position: schema.Position{X: 400, Y: 160}}},
-		{Kind: authoring.CommandSetConfig, SetConfig: &authoring.SetConfigCommand{GraphID: "main", NodeID: "$keys", FieldID: "slot", Value: "editor-window"}},
+		{Kind: authoring.CommandSetConfig, SetConfig: &authoring.SetConfigCommand{GraphID: "main", NodeID: "$keys", FieldID: "slot", Value: schema.DefaultWorkflowTargetID}},
 		{Kind: authoring.CommandBindValue, BindValue: &authoring.BindValueCommand{GraphID: "main", NodeID: "$keys", PortID: "keys", Value: []string{"F9"}}},
 		{Kind: authoring.CommandConnect, Connect: &authoring.EdgeCommand{GraphID: "main", Edge: authoring.PatchEdgeFromSource(schema.Edge{Channel: schema.EdgeExec, From: schema.Endpoint{NodeID: "run-started", PortID: "started"}, To: schema.Endpoint{NodeID: "$keys", PortID: "in"}})}},
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+	if ds, err := service.SaveTargetBindings(patched.Source.WorkflowID, patched.Source.Revision, map[string]string{schema.DefaultWorkflowTargetID: "editor-window"}); err != nil || schema.HasErrors(ds) {
+		t.Fatalf("save local target: %v, %+v", err, ds)
 	}
 	started, err := service.StartRun(patched.Source.WorkflowID)
 	if err != nil || started.Run == nil || started.Run.RunID == "" {

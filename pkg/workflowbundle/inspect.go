@@ -30,6 +30,7 @@ type NodePackDependency struct {
 }
 
 type Info struct {
+	PublishedSourceHash        string               `json:"publishedSourceHash"`
 	PanelCount                 int                  `json:"panelCount"`
 	WorkflowID                 string               `json:"workflowId"`
 	Name                       string               `json:"name"`
@@ -87,7 +88,7 @@ func Inspect(ctx context.Context, raw []byte) (Info, error) {
 	return Info{
 		PanelCount: len(manifest.Panels),
 		WorkflowID: internalInfo.WorkflowID, Name: internalInfo.Name, Revision: internalInfo.Revision,
-		SourceHash: string(internalInfo.SourceHash), ResourceCount: internalInfo.ResourceCount,
+		PublishedSourceHash: string(internalInfo.PublishedSourceHash), SourceHash: string(internalInfo.SourceHash), ResourceCount: internalInfo.ResourceCount,
 		TargetProfileCount:         internalInfo.TargetProfileCount,
 		CredentialRequirementCount: internalInfo.CredentialRequirementCount,
 		Dependencies:               dependencies, BlobCount: internalInfo.BlobCount,

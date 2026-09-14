@@ -70,7 +70,7 @@ func waitStableSource(builtins nodes.Builtins, slot string) []byte {
 	// in automation_observation_test.go. Keep this integration budget above the
 	// host scheduler quantum so it tests Target reuse and journaling, not timing.
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-wait-stable","name":"Wait Stable"},"revision":0,"entryGraph":"main",
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-wait-stable","name":"Wait Stable"},"revision":0,"entryGraph":"main",
 		"graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"stable","nodeRef":{"nodeTypeId":%q,"version":"1.1.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{"slot":%q},

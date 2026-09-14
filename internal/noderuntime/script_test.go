@@ -51,7 +51,7 @@ func TestScriptExecuteRunsThroughInjectedIsolationAndJournalsOnlyRedactedFacts(t
 	scriptRef := builtins.ScriptExecuteContract.NodeRef()
 	sourceText := `return {answer: input.value + 1, now: Date.now()};`
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-script","name":"Script"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-script","name":"Script"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"script","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},

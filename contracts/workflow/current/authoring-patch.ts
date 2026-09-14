@@ -1,1 +1,1 @@
-export * from '../v1/authoring-patch'
+export * from '../v5/authoring-patch'

@@ -182,7 +182,7 @@ func TestCompileResultViewAlwaysEmitsDiagnostics(t *testing.T) {
 func TestRunValidateStrictlyRejectsLegacySource(t *testing.T) {
 	root := t.TempDir()
 	sourcePath := filepath.Join(root, "legacy.json")
-	if err := os.WriteFile(sourcePath, []byte(`{"format":"yotta.workflow","version":"3"}`), 0o600); err != nil {
+	if err := os.WriteFile(sourcePath, []byte(`{"format":"yotta.workflow","version":"5"}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	var output bytes.Buffer

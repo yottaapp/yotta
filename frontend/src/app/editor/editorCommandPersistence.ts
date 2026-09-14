@@ -77,10 +77,19 @@ export function toWorkflowPatch(pending: readonly PendingEditorCommand[]): Workf
             default: jsonValue(command.defaultValue),
           },
         }
+      case 'set-workflow-targets': {
+        const [first, ...rest] = clone(command.targets)
+        if (!first) throw new Error('workflow targets require one default')
+        return { kind: command.kind, setWorkflowTargets: { targets: [first, ...rest] } }
+      }
+      case 'set-parameter-blocks':
+        return { kind: command.kind, setParameterBlocks: { blocks: clone(command.blocks) } }
       case 'update-state-variable':
         return {
           kind: command.kind,
           updateStateVariable: {
+            ...(command.parameter ? { parameter: clone(command.parameter) } : {}),
+            ...(command.clearParameter ? { clearParameter: true } : {}),
             name: command.name,
             type: clone(command.type),
             default: clone(command.defaultValue) as WorkflowJSONValue,

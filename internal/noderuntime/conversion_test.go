@@ -70,7 +70,7 @@ func TestExecutorRunsPureProgramWithoutResourceProviders(t *testing.T) {
 	}
 	ref := builtins.ConcatContract.NodeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-pure","name":"Pure"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-pure","name":"Pure"},
 		"revision":0,"entryGraph":%q,"graphs":[{"id":%q,"kind":"main","nodes":[{
 			"id":%q,"nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},
 			"config":{},"bindings":{"a":{"kind":"value","value":"Yotta "},"b":{"kind":"value","value":"v1"}}
@@ -129,7 +129,7 @@ func TestExecutorClosesSuccessfulAttemptWhenCallerCancelsAsAdapterReturns(t *tes
 	}
 	ref := builtins.ConcatContract.NodeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-cancel-race","name":"Cancel race"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-cancel-race","name":"Cancel race"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[{
 			"id":"concat","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},
 			"config":{},"bindings":{"a":{"kind":"value","value":"Yotta "},"b":{"kind":"value","value":"v1"}}
@@ -480,7 +480,7 @@ func conversionSource(builtins nodes.Builtins, ref blob.BlobRef) []byte {
 	toStream := builtins.BlobToStreamContract.NodeRef()
 	toBlob := builtins.StreamToBlobContract.NodeRef()
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-convert","name":"Convert"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-convert","name":"Convert"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"to-stream","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			 "bindings":{"blob":{"kind":"blob","blob":{"mediaType":%q,"digest":%q,"size":%d}}}},

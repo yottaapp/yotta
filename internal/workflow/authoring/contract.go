@@ -73,6 +73,8 @@ func GenerateSchema() ([]byte, error) {
 		{CommandClearTargetDefault, "clearTargetDefault"},
 		{CommandAddStateVariable, "addStateVariable"},
 		{CommandUpdateStateVariable, "updateStateVariable"},
+		{CommandSetParameterBlocks, "setParameterBlocks"},
+		{CommandSetWorkflowTargets, "setWorkflowTargets"},
 		{CommandRemoveStateVariable, "removeStateVariable"},
 		{CommandAddNode, "addNode"},
 		{CommandUpgradeNodeContract, "upgradeNodeContract"},

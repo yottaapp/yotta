@@ -758,6 +758,10 @@ func waitApplicationDebug(t *testing.T, events <-chan appcore.DebugEvent, runID 
 }
 
 func newTestApplication(t *testing.T, now time.Time, adapterOverride nodeadapter.Adapter, observed ...blob.Object) (*appcore.Application, *workflowstore.SourceStore, *workflowstore.ProgramStore, nodes.Builtins, chan appcore.RunEvent, chan appcore.DebugEvent) {
+	return newConfiguredTestApplication(t, now, adapterOverride, nil, observed...)
+}
+
+func newConfiguredTestApplication(t *testing.T, now time.Time, adapterOverride nodeadapter.Adapter, configure func(*appcore.Config), observed ...blob.Object) (*appcore.Application, *workflowstore.SourceStore, *workflowstore.ProgramStore, nodes.Builtins, chan appcore.RunEvent, chan appcore.DebugEvent) {
 	t.Helper()
 	builtins, err := nodes.Build()
 	if err != nil {
@@ -830,7 +834,7 @@ func newTestApplication(t *testing.T, now time.Time, adapterOverride nodeadapter
 	executor := compiler.NewExecutor(builtins.Catalog, adapters, compiler.ExecutorOptions{Now: func() time.Time { return now }})
 	events := make(chan appcore.RunEvent, 16)
 	debugEvents := make(chan appcore.DebugEvent, 32)
-	application, err := appcore.New(appcore.Config{
+	config := appcore.Config{
 		Catalog: builtins.Catalog, Authoring: projection, CompilerBuild: build, ConfigValidators: builtins.ConfigValidators,
 		BlobVerifier: compiler.BlobVerifierFunc(func(context.Context, blob.BlobRef) error { return nil }),
 		Sources:      sources, Programs: programs, Runs: runs,
@@ -838,7 +842,11 @@ func newTestApplication(t *testing.T, now time.Time, adapterOverride nodeadapter
 		ResourceOptions: resource.Options{}, OwnerCloseTimeout: time.Second,
 		Now: func() time.Time { return now }, OnRunEvent: func(event appcore.RunEvent) { events <- event },
 		OnDebugEvent: func(event appcore.DebugEvent) { debugEvents <- event },
-	})
+	}
+	if configure != nil {
+		configure(&config)
+	}
+	application, err := appcore.New(config)
 	if err != nil {
 		t.Fatal(err)
 	}

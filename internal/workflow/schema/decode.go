@@ -252,7 +252,34 @@ func reflectedContract(typ reflect.Type) reflectedStructContract {
 }
 
 func validateSource(source WorkflowSource) []Diagnostic {
-	var out []Diagnostic
+	out := validateParameters(source.Variables)
+	if err := ValidateWorkflowTargets(source.Targets); err != nil {
+		appendDiagnostic(&out, diagnostic(CodeInvalidField, []string{"targets"}, map[string]any{"reason": err.Error()}))
+	}
+
+	if len(source.Targets) > 0 {
+		expected := ""
+		for _, target := range source.Targets {
+			if target.Default {
+				expected = target.ID
+			}
+		}
+		actual := ""
+		for _, value := range source.TargetDefaults {
+			if value.Target == "target" {
+				actual = value.Slot
+			}
+		}
+		for _, value := range source.TargetDefaults {
+			if value.Target == "application" && value.Slot != expected {
+				appendDiagnostic(&out, diagnostic(CodeInvalidField, []string{"targetDefaults"}, map[string]any{"keyword": "workflowTargetDefault"}))
+			}
+		}
+		if expected != "" && actual != expected {
+			appendDiagnostic(&out, diagnostic(CodeInvalidField, []string{"targetDefaults"}, map[string]any{"keyword": "workflowTargetDefault"}))
+		}
+	}
+	out = append(out, validateParameterBlocks(source)...)
 	if err := source.Workflow.validateTimestamps(); err != nil {
 		appendDiagnostic(&out, diagnostic(CodeInvalidField, []string{"workflow"}, map[string]any{"keyword": "timestamps", "reason": err.Error()}))
 	}

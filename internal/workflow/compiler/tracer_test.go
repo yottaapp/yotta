@@ -194,7 +194,7 @@ func TestConcatTracerFreezesTypedDataEdgesIndependentOfSourceOrder(t *testing.T)
 	catalog, contract := concatCatalogForTest(t)
 	ref := contract.NodeRef()
 	raw := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-2","name":"Chain"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-2","name":"Chain"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"second","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{},"bindings":{"b":{"kind":"value","value":"c"}}},
 			{"id":"first","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{"a":{"kind":"value","value":"a"},"b":{"kind":"value","value":"b"}}}
@@ -283,7 +283,7 @@ func TestOpenProgramRevalidatesPinnedConfigValidator(t *testing.T) {
 	}
 	extract := builtins.AIExtractContract.NodeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-ai-validator","name":"AI Validator"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-ai-validator","name":"AI Validator"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"extract","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":1,"y":0},
@@ -336,7 +336,7 @@ func TestCompileResolvesDynamicSwitchPortsIntoProgram(t *testing.T) {
 	switchRef := switchDefinition.Contract.NodeRef()
 	concatRef := concatDefinition.Contract.NodeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-switch","name":"Switch"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-switch","name":"Switch"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"concat","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":1},"config":{},"bindings":{"a":{"kind":"value","value":"be"},"b":{"kind":"value","value":"ta"}}},
@@ -441,7 +441,7 @@ func TestCompilerFreezesConcreteTypedStateAndStrictOpenRevalidatesInitialValues(
 	ref := builtins.ConcatContract.NodeRef()
 	typeRef := builtins.StringType.TypeRef()
 	raw := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-state","name":"State"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-state","name":"State"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[{
 			"id":"concat","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			"bindings":{"a":{"kind":"value","value":"a"},"b":{"kind":"value","value":"b"}}
@@ -496,7 +496,7 @@ func TestCompilerRejectsUnresolvedUnknownAndNonInlineStateDeclarations(t *testin
 	}
 	ref := builtins.ConcatContract.NodeRef()
 	base := fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-state-invalid","name":"State invalid"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-state-invalid","name":"State invalid"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[{
 			"id":"concat","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			"bindings":{"a":{"kind":"value","value":"a"},"b":{"kind":"value","value":"b"}}
@@ -639,7 +639,7 @@ func TestCompilerRejectsBlobLiteralForResourceLeasedInput(t *testing.T) {
 	ref := builtins.StreamToBlobContract.NodeRef()
 	blobRef := blob.BlobRef{MediaType: "application/octet-stream", Digest: testDigest(t, "wrong carrier"), Size: 4}
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-invalid-carrier","name":"Invalid"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-invalid-carrier","name":"Invalid"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[{
 			"id":"to-blob","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},
 			"config":{"mediaType":"application/octet-stream"},"bindings":{"stream":{"kind":"blob","blob":{"mediaType":%q,"digest":%q,"size":%d}}}
@@ -718,7 +718,7 @@ func concatSourceForTest(ref nodecontract.NodeRef, a, b string, edge *string) []
 		edges = *edge
 	}
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-1","name":"Concat"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-1","name":"Concat"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[{
 			"id":"concat-1","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},
 			"config":{},"bindings":{"a":{"kind":"value","value":%q},"b":{"kind":"value","value":%q}}
@@ -728,7 +728,7 @@ func concatSourceForTest(ref nodecontract.NodeRef, a, b string, edge *string) []
 
 func conversionSourceForTest(toStream, toBlob nodecontract.NodeRef, ref blob.BlobRef) []byte {
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-convert","name":"Convert"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-convert","name":"Convert"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"to-blob","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{"mediaType":"application/octet-stream"},"bindings":{}},
 			{"id":"to-stream","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
@@ -740,7 +740,7 @@ func conversionSourceForTest(toStream, toBlob nodecontract.NodeRef, ref blob.Blo
 
 func signalSourceForTest(source, target nodecontract.NodeRef, edges []string) []byte {
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-signals","name":"Signals"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-signals","name":"Signals"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"source","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"target","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{},"bindings":{}}

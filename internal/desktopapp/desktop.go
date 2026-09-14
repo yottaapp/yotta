@@ -30,6 +30,7 @@ import (
 	"github.com/yottaapp/yotta/internal/noderuntime"
 	"github.com/yottaapp/yotta/internal/registryclient"
 	"github.com/yottaapp/yotta/internal/securestore"
+	"github.com/yottaapp/yotta/internal/serviceconfig"
 	"github.com/yottaapp/yotta/internal/services"
 	"github.com/yottaapp/yotta/internal/services/asset"
 	"github.com/yottaapp/yotta/internal/services/calibration"
@@ -151,6 +152,7 @@ func Run(config Config) error {
 		return fmt.Errorf("open local runtime: %w", err)
 	}
 	app = local.Settings
+	config = withServiceSettings(config, app.Settings().OnlineServices)
 	roots := local.Roots
 	workflowRuntime := local.Workflow
 	sharedBlobStore := workflowRuntime.BlobStore
@@ -307,6 +309,9 @@ func Run(config Config) error {
 			return references
 		}),
 	}
+	if strings.TrimRight(config.RegistryURL, "/") == serviceconfig.DefaultRegistryURL {
+		workflowOptions = append(workflowOptions, workflow.WithWalletPage(wailsApp.Browser, serviceconfig.DefaultWalletURL))
+	}
 	if strings.TrimSpace(config.RegistryURL) != "" {
 		tokens := config.RegistryTokens
 		if tokens == nil && strings.TrimSpace(config.OIDCClientID) != "" {
@@ -314,6 +319,7 @@ func Run(config Config) error {
 			if scopeErr != nil {
 				return fmt.Errorf("resolve profile account identity: %w", scopeErr)
 			}
+			credentialScope = serviceCredentialScope(credentialScope, config)
 			session, sessionErr := nativeoidc.New(nativeoidc.Config{
 				Credentials: securestore.New(), CredentialScope: credentialScope, AccountURL: config.AccountURL,
 				AuthorizationEndpoint: config.OIDCAuthorizationEndpoint,

@@ -22,7 +22,7 @@ func TestGeneratedPatchSchemaUsesExactTaggedUnion(t *testing.T) {
 	if err := json.Unmarshal(raw, &document); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(document.Definitions["Command"].OneOf); got != 38 {
+	if got := len(document.Definitions["Command"].OneOf); got != 40 {
 		t.Fatalf("command variants = %d", got)
 	}
 	if !bytes.Contains(raw, []byte(`"additionalProperties": false`)) ||

@@ -191,7 +191,7 @@ func navigationSource(t *testing.T, b nodes.Builtins, id string, config map[stri
 		r := def.Contract.NodeRef()
 		return map[string]any{"nodeTypeId": r.NodeTypeID, "version": r.Version, "semanticDigest": r.SemanticDigest}
 	}
-	source := map[string]any{"format": "yotta.workflow", "version": "1", "workflow": map[string]any{"id": "navigation-test", "name": "Navigation test"}, "revision": 0, "entryGraph": "main",
+	source := map[string]any{"format": "yotta.workflow", "version": "5", "workflow": map[string]any{"id": "navigation-test", "name": "Navigation test"}, "revision": 0, "entryGraph": "main",
 		"graphs": []any{map[string]any{"id": "main", "kind": "main", "nodes": []any{
 			map[string]any{"id": "start", "nodeRef": ref(start), "position": map[string]int{"x": 0, "y": 0}, "config": map[string]any{}, "bindings": map[string]any{}},
 			map[string]any{"id": "navigation", "nodeRef": ref(node), "position": map[string]int{"x": 100, "y": 0}, "config": config, "bindings": bindings},

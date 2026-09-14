@@ -96,7 +96,7 @@ func TestOpenSourceStoreDurablyPublishesRegisteredMigration(t *testing.T) {
 	}
 	repository := foundation.Workflows()
 	current := currentMigrationTestSource(t)
-	legacy := bytes.Replace(current, []byte(`"version":"1"`), []byte(`"version":"0"`), 1)
+	legacy := bytes.Replace(current, []byte(`"version":"5"`), []byte(`"version":"0"`), 1)
 	legacyHash, err := artifact.Sum("yotta/test/legacy-workflow-source/v1", legacy)
 	if err != nil {
 		t.Fatal(err)
@@ -150,7 +150,7 @@ func TestOpenSourceStoreDurablyPublishesRegisteredMigration(t *testing.T) {
 func currentMigrationTestSource(t *testing.T) []byte {
 	t.Helper()
 	raw := []byte(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-migrate","name":"Migrate"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-migrate","name":"Migrate"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[],"edges":[],"inputs":[],"outputs":[]}],
 		"variables":[],"resources":[],"targetProfileDefinitions":[],"credentialRequirements":[],"dependencies":[]
 	}`)

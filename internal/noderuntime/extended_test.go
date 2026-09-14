@@ -25,7 +25,7 @@ func TestGeneratedBreakNodeCompilesReopensAndExecutesTypedFields(t *testing.T) {
 	}
 	ref := definition.Contract.NodeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-break-point","name":"Break point"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-break-point","name":"Break point"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[{
 			"id":"break","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			"bindings":{"value":{"kind":"value","value":{"x":0.25,"y":0.75,"unit":"ratio"}}}
@@ -63,7 +63,7 @@ func TestTypedSelectResolvesFromItsConsumerAndExecutesWithoutCoercion(t *testing
 	selectDefinition, _ := builtins.Definition(nodes.SelectNodeID)
 	concatDefinition, _ := builtins.Definition(nodes.ConcatNodeID)
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-select","name":"Select"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-select","name":"Select"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"select","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			 "bindings":{"condition":{"kind":"value","value":true},"when_true":{"kind":"value","value":"typed"},"when_false":{"kind":"value","value":"wrong"}}},
@@ -111,7 +111,7 @@ func TestTextNodesCompileReopenAndExecuteUnicodePipeline(t *testing.T) {
 	concat, _ := builtins.Definition(nodes.ConcatNodeID)
 	length, _ := builtins.Definition(nodes.LengthNodeID)
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-text","name":"Text"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-text","name":"Text"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"substring","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			 "bindings":{"text":{"kind":"value","value":"a节点b"},"start":{"kind":"value","value":1},"length":{"kind":"value","value":2}}},
@@ -156,7 +156,7 @@ func TestJSONNodesCompileReopenAndExecuteCanonicalPipeline(t *testing.T) {
 	path, _ := builtins.Definition(nodes.JSONPathNodeID)
 	stringify, _ := builtins.Definition(nodes.ToJSONNodeID)
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-json","name":"JSON"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-json","name":"JSON"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"parse","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			 "bindings":{"text":{"kind":"value","value":"{\"items\":[{\"name\":\"节点\"}]}"}}},
@@ -203,7 +203,7 @@ func TestGeometryNodesCompileReopenAndExecuteTypedPipeline(t *testing.T) {
 	region, _ := builtins.Definition(nodes.RegionAroundPointNodeID)
 	breakRegion, _ := builtins.Definition(nodes.BreakRegionNodeID)
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-geometry","name":"Geometry"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-geometry","name":"Geometry"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"make","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			 "bindings":{"x":{"kind":"value","value":0.8},"y":{"kind":"value","value":0.1},"unit":{"kind":"value","value":"ratio"}}},

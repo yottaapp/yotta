@@ -26,6 +26,7 @@ type Installation struct {
 
 // Configuration is immutable preparation metadata, never consulted per operation.
 type Configuration struct {
+	Kind       string
 	Origin     string
 	Executable string
 	Arguments  []string

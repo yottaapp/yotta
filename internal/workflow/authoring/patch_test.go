@@ -1260,3 +1260,27 @@ func TestEngineRestoresInheritedWindowSlotAndAllowsLaterOverride(t *testing.T) {
 		t.Fatalf("correcting an unsaved restore: %v", err)
 	}
 }
+
+func TestParameterLayoutPatchPersistsPresentationWithoutRuntimeState(t *testing.T) {
+	builtins, projection := testContracts(t)
+	engine, err := authoring.New(builtins.Catalog, projection, func() string { return "unused" })
+	if err != nil {
+		t.Fatal(err)
+	}
+	source := emptySource()
+	result, err := engine.Apply(source, []authoring.Command{{Kind: authoring.CommandSetParameterBlocks, SetParameterBlocks: &authoring.SetParameterBlocksCommand{Blocks: []schema.ParameterBlock{{ID: "blank", Kind: "label", Description: "Heading help"}, {ID: "line", Kind: "separator", Order: 1}}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Source.ParameterBlocks[0].Description != "Heading help" || len(result.Source.ParameterBlocks) != 2 || len(result.Source.Variables) != 0 || len(source.ParameterBlocks) != 0 {
+		t.Fatal("presentation patch mutated runtime state or original source")
+	}
+	raw, err := json.Marshal(result.Source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, diagnostics := schema.ParseSource(raw)
+	if schema.HasErrors(diagnostics) {
+		t.Fatal(diagnostics)
+	}
+}

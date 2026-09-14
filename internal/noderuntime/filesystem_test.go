@@ -202,7 +202,7 @@ func filesystemSource(t *testing.T, builtins nodes.Builtins, nodeID, path string
 		config = `{}`
 	}
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-filesystem","name":"Filesystem"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-filesystem","name":"Filesystem"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"file","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},
@@ -228,7 +228,7 @@ func filesystemImageRoundTripSource(t *testing.T, builtins nodes.Builtins) []byt
 		t.Fatal("save-image definition is missing")
 	}
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-image-round-trip","name":"Image Round Trip"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-image-round-trip","name":"Image Round Trip"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"load","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{"maxBytes":%d},"bindings":{"path":{"kind":"value","value":"source.png"}}},

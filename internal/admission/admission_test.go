@@ -443,7 +443,7 @@ func conversionProgram(t *testing.T) (nodes.Builtins, compiler.ProgramSnapshot) 
 	toBlob := builtins.StreamToBlobContract.NodeRef()
 	ref := blob.BlobRef{MediaType: "application/octet-stream", Digest: testDigest(t, "input"), Size: 5}
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-admission","name":"Admission"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-admission","name":"Admission"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"to-stream","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			 "bindings":{"blob":{"kind":"blob","blob":{"mediaType":%q,"digest":%q,"size":%d}}}},
@@ -476,7 +476,7 @@ func scriptProgram(t *testing.T) (nodes.Builtins, compiler.ProgramSnapshot) {
 	}
 	startRef := started.Contract.NodeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-script-admission","name":"Script admission"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-script-admission","name":"Script admission"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"script","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},

@@ -18,6 +18,8 @@ export interface WorkflowSaveError {
 }
 
 const validationCodes = new Set([
+  'INVALID_TARGET',
+  'REFERENCE_IN_USE',
   'INVALID_FIELD',
   'MISSING_REQUIRED_FIELD',
   'UNKNOWN_FIELD',
@@ -49,6 +51,14 @@ export function describeWorkflowSaveError(
     (commandIndex !== undefined ? targetFromCommand(commands[commandIndex]) : undefined)
   if (normalized.id === 'workflow.revision.conflict') {
     return { kind: 'revision', message: i18n.global.t('workflow.editor.revision_conflict') }
+  }
+
+  if (code === 'INVALID_TARGET' || code === 'REFERENCE_IN_USE') {
+    return {
+      kind: 'validation',
+      message: i18n.global.t(`workflow.editor.save_error.${code}`),
+      target,
+    }
   }
 
   if (validationCodes.has(code) || normalized.category === 'validation') {

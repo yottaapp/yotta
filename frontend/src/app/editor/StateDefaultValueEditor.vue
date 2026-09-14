@@ -68,7 +68,7 @@ const props = defineProps<{
   type?: TypeProjection
   editorAdapter?: 'key-chord'
 }>()
-const emit = defineEmits<{ 'update:model-value': [value: unknown] }>()
+const emit = defineEmits<{ 'update:model-value': [value: unknown]; validity: [valid: boolean] }>()
 const { t } = useI18n()
 
 const numericValue = computed(() =>
@@ -115,15 +115,23 @@ function setText(event: Event): void {
 
 function setJSONDraft(value: string | number): void {
   jsonDraft.value = String(value)
+  try {
+    JSON.parse(jsonDraft.value)
+    emit('validity', true)
+  } catch {
+    emit('validity', false)
+  }
 }
 
 function commitJSON(): void {
   try {
     const value: unknown = JSON.parse(jsonDraft.value)
     jsonError.value = false
+    emit('validity', true)
     emit('update:model-value', value)
   } catch {
     jsonError.value = true
+    emit('validity', false)
   }
 }
 </script>

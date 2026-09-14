@@ -110,14 +110,14 @@ func (factory executionEnvironmentFactory) seal(
 	}
 	targets := make([]targetruntime.Installation, 0, len(config.http.Entries())+len(applications.Entries())+len(automation.Entries()))
 	for _, installed := range config.http.Entries() {
-		targets = append(targets, targetruntime.Installation{Slot: installed.Slot, TargetID: installed.TargetID, Provider: installed.Provider, Configuration: targetruntime.Configuration{Origin: installed.Profile.Machine().Origin}})
+		targets = append(targets, targetruntime.Installation{Slot: installed.Slot, TargetID: installed.TargetID, Provider: installed.Provider, Configuration: targetruntime.Configuration{Kind: "http-target", Origin: installed.Profile.Machine().Origin}})
 	}
 	for _, installed := range applications.Entries() {
 		profile := installed.Profile.Machine()
-		targets = append(targets, targetruntime.Installation{Slot: installed.Slot, TargetID: installed.TargetID, Provider: installed.Provider, Configuration: targetruntime.Configuration{Executable: profile.Executable, Arguments: profile.Arguments}})
+		targets = append(targets, targetruntime.Installation{Slot: installed.Slot, TargetID: installed.TargetID, Provider: installed.Provider, Configuration: targetruntime.Configuration{Kind: "configured-application", Executable: profile.Executable, Arguments: profile.Arguments}})
 	}
 	for _, installed := range automation.Entries() {
-		targets = append(targets, targetruntime.Installation{Slot: installed.Slot, TargetID: installed.TargetID, Provider: installed.Provider})
+		targets = append(targets, targetruntime.Installation{Slot: installed.Slot, TargetID: installed.TargetID, Provider: installed.Provider, Configuration: targetruntime.Configuration{Kind: installed.Profile.TargetKind()}})
 	}
 	targetSnapshot, err := targetruntime.NewSnapshot(targets)
 	if err != nil {

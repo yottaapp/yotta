@@ -9,6 +9,13 @@ import (
 const MaxTargetDefaults = 64
 
 func TargetDefaultSlot(source WorkflowSource, target string) (string, bool) {
+	if (target == "target" || target == "application") && len(source.Targets) > 0 {
+		for _, candidate := range source.Targets {
+			if candidate.Default {
+				return candidate.ID, true
+			}
+		}
+	}
 	for _, candidate := range source.TargetDefaults {
 		if candidate.Target == target {
 			return candidate.Slot, true
@@ -25,6 +32,26 @@ func SetTargetDefault(source *WorkflowSource, target, slot string) error {
 	slot = strings.TrimSpace(slot)
 	if !validTargetDefaultName(target) || !validTargetDefaultName(slot) {
 		return errors.New("target default names are invalid")
+	}
+	if (target == "target" || target == "application") && len(source.Targets) > 0 {
+		found := false
+		for _, declared := range source.Targets {
+			found = found || declared.ID == slot
+		}
+		if !found {
+			return errors.New("target default must reference a workflow target")
+		}
+		target = "target"
+		for index := range source.Targets {
+			source.Targets[index].Default = source.Targets[index].ID == slot
+		}
+	}
+	if len(source.Targets) > 0 && target == "target" {
+		for index := range source.TargetDefaults {
+			if source.TargetDefaults[index].Target == "application" {
+				source.TargetDefaults[index].Slot = slot
+			}
+		}
 	}
 	for index := range source.TargetDefaults {
 		if source.TargetDefaults[index].Target == target {
@@ -45,6 +72,9 @@ func SetTargetDefault(source *WorkflowSource, target, slot string) error {
 func ClearTargetDefault(source *WorkflowSource, target string) error {
 	if source == nil {
 		return errors.New("workflow source is required")
+	}
+	if (target == "target" || target == "application") && len(source.Targets) > 0 {
+		return errors.New("workflow requires one default target")
 	}
 	for index, candidate := range source.TargetDefaults {
 		if candidate.Target != target {

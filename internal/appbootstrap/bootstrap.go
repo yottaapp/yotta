@@ -191,8 +191,13 @@ func Build(config Config) (*Runtime, error) {
 	if err != nil {
 		return nil, err
 	}
+	parameters, err := workflowstore.OpenParameterStore(filepath.Join(root, "workflow-parameters"))
+	if err != nil {
+		return nil, err
+	}
 	sources, err := workflowstore.OpenSourceStore(config.WorkflowRepository, workflowstore.SourceStoreOptions{
-		MaxSources: config.Limits.MaxSources, Now: config.Now,
+		MaxSources: config.Limits.MaxSources, Now: config.Now, Parameters: parameters,
+		MigrationHistoryRoot: filepath.Join(root, "workflow-source-migrations"),
 	})
 	if err != nil {
 		return nil, err
@@ -304,6 +309,7 @@ func Build(config Config) (*Runtime, error) {
 		return nil, err
 	}
 	application, err := appcore.New(appcore.Config{
+		Parameters:   parameters,
 		NodePackages: packageDependencies,
 		Catalog:      catalog, Authoring: authoringProjection, CompilerBuild: build, ConfigValidators: builtins.ConfigValidators,
 		BlobVerifier:    blobStore,

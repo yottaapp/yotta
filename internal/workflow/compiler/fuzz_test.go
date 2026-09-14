@@ -41,7 +41,7 @@ func FuzzOpenProgram(f *testing.F) {
 
 func fuzzSource(ref nodecontract.NodeRef) []byte {
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"fuzz","name":"Fuzz"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"fuzz","name":"Fuzz"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[{
 			"id":"concat","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},
 			"config":{},"bindings":{"a":{"kind":"value","value":"a"},"b":{"kind":"value","value":"b"}}

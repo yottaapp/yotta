@@ -205,7 +205,7 @@ func automationPlaybackSource(builtins nodes.Builtins, slot string, ref blob.Blo
 	started, _ := builtins.Definition(nodes.RunStartedNodeID)
 	playback, _ := builtins.Definition(nodes.PlayInputClipNodeID)
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-automation-playback","name":"Automation Playback"},"revision":0,"entryGraph":"main",
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-automation-playback","name":"Automation Playback"},"revision":0,"entryGraph":"main",
 		"graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"playback","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":1,"y":0},"config":{"slot":%q},
@@ -220,7 +220,7 @@ func automationMacroSource(builtins nodes.Builtins, slot string, ref blob.BlobRe
 	started, _ := builtins.Definition(nodes.RunStartedNodeID)
 	playback, _ := builtins.Definition(nodes.PlayMacroNodeID)
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-automation-macro","name":"Automation Macro"},"revision":0,"entryGraph":"main",
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-automation-macro","name":"Automation Macro"},"revision":0,"entryGraph":"main",
 		"graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"playback","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{"slot":%q},

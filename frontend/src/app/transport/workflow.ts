@@ -34,6 +34,14 @@ import type {
 import { callRPC, invoke } from '@/lib/invoke'
 import type { Draft as ReviewDraft } from '@bindings/github.com/yottaapp/yotta/internal/communityclient/models.js'
 
+export const parameterTransport = {
+  saveTargetBindings: (workflowId: string, revision: number, bindings: Record<string, string>) =>
+    invoke(WorkflowService.SaveTargetBindings, workflowId, revision, bindings),
+  get: (workflowId: string) => invoke(WorkflowService.GetParameters, workflowId),
+  save: (workflowId: string, revision: number, values: Record<string, unknown>) =>
+    invoke(WorkflowService.SaveParameters, workflowId, revision, values),
+}
+
 export const communityTransport = {
   submitReport: (
     draft: import('@bindings/github.com/yottaapp/yotta/internal/communityclient/models.js').ReportDraft,

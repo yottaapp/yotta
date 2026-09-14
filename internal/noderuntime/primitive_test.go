@@ -22,7 +22,7 @@ func TestPrimitiveInlineAdaptersCompileAndExecuteNominalValues(t *testing.T) {
 	add, _ := builtins.Definition(nodes.AddNodeID)
 	greater, _ := builtins.Definition(nodes.GreaterThanNodeID)
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-primitives","name":"Primitives"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-primitives","name":"Primitives"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"add","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			 "bindings":{"a":{"kind":"value","value":2},"b":{"kind":"value","value":3}}},
@@ -60,7 +60,7 @@ func TestPrimitiveUnrepresentableResultPersistsDeclaredTerminalFailureWithoutInv
 	add, _ := builtins.Definition(nodes.AddNodeID)
 	ref := add.Contract.NodeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-overflow","name":"Overflow"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-overflow","name":"Overflow"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[{
 			"id":"add","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			"bindings":{"a":{"kind":"value","value":9007199254740991},"b":{"kind":"value","value":9007199254740991}}

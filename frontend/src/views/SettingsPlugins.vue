@@ -1,335 +1,349 @@
 <template>
-  <section class="space-y-5 p-5" data-testid="settings-plugins" :aria-busy="loading || !!busy">
-    <header class="flex flex-wrap items-start justify-between gap-3">
-      <div class="space-y-1">
-        <h2 class="text-base font-semibold text-highlighted">{{ t('settingsPlugins.title') }}</h2>
-        <p class="max-w-prose text-xs leading-5 text-muted">
-          {{ t('settingsPlugins.description') }}
-        </p>
-      </div>
-      <div class="flex gap-2">
-        <UButton
-          size="sm"
-          color="neutral"
-          variant="ghost"
-          icon="i-tabler-refresh"
-          :disabled="loading || !!busy"
-          @click="refresh(true)"
-          >{{ t('common.refresh') }}</UButton
-        >
-        <UButton
-          size="sm"
-          icon="i-tabler-plus"
-          data-testid="plugin-import"
-          :loading="busy === 'import'"
-          :disabled="!!busy"
-          @click="importPlugin"
-          >{{ t('settingsPlugins.import') }}</UButton
-        >
-      </div>
-    </header>
-    <UAlert
-      v-if="failure"
-      color="error"
-      variant="soft"
-      :title="t('settingsPlugins.failed')"
-      :description="failure"
-      role="alert"
-    />
-    <UAlert
-      v-if="restartRequired"
-      color="warning"
-      variant="soft"
-      icon="i-tabler-refresh"
-      :title="t('settingsPlugins.restart_title')"
-      :description="t('settingsPlugins.restart_hint')"
-    />
-
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div
-        class="flex flex-wrap gap-1"
-        role="group"
-        :aria-label="t('settingsPlugins.filter_label')"
-      >
-        <UButton
-          v-for="option in filters"
-          :key="option.key"
-          size="sm"
-          :color="filter === option.key ? 'primary' : 'neutral'"
-          :variant="filter === option.key ? 'soft' : 'ghost'"
-          :aria-pressed="filter === option.key"
-          @click="filter = option.key"
-        >
-          {{ t(option.label) }} <span class="ml-1 tabular-nums">{{ option.count }}</span>
-        </UButton>
-      </div>
-      <UInput
-        v-model="query"
-        icon="i-tabler-search"
-        class="w-full sm:w-64"
-        :placeholder="t('settingsPlugins.search')"
-        :aria-label="t('settingsPlugins.search')"
-        data-testid="plugin-search"
-      />
-    </div>
-
-    <div
-      v-if="selectedIds.length"
-      class="flex flex-wrap items-center gap-2 rounded-lg border border-primary/25 bg-primary/5 px-3 py-2"
-      data-testid="plugin-bulk-toolbar"
+  <section class="settings-page" data-testid="settings-plugins" :aria-busy="loading || !!busy">
+    <SettingsSection
+      :title="t('settingsPlugins.title')"
+      :description="t('settingsPlugins.description')"
+      icon="i-tabler-puzzle"
     >
-      <div class="mr-auto min-w-0 text-xs">
-        <span class="font-medium text-highlighted">{{
-          t('settingsPlugins.selected', { count: selectedIds.length })
-        }}</span>
-        <span v-if="hiddenSelected" class="ml-2 text-muted">{{
-          t('settingsPlugins.hidden_selected', { count: hiddenSelected })
-        }}</span>
-      </div>
-      <UButton
-        size="sm"
-        color="neutral"
-        variant="soft"
-        data-testid="plugin-bulk-enable"
-        :loading="busy === 'batch:enable'"
-        :disabled="!!busy"
-        @click="runBatch('enable')"
-        >{{ t('settingsPlugins.enable') }}</UButton
-      >
-      <UButton
-        size="sm"
-        color="neutral"
-        variant="soft"
-        data-testid="plugin-bulk-disable"
-        :loading="busy === 'batch:disable'"
-        :disabled="!!busy"
-        @click="runBatch('disable')"
-        >{{ t('settingsPlugins.disable') }}</UButton
-      >
-      <UButton
-        size="sm"
-        color="error"
-        variant="soft"
-        data-testid="plugin-bulk-uninstall"
-        :loading="busy === 'batch:uninstall'"
-        :disabled="!!busy"
-        @click="runBatch('uninstall')"
-        >{{ t('settingsPlugins.uninstall') }}</UButton
-      >
-      <UButton
-        size="sm"
-        color="neutral"
-        variant="ghost"
-        :disabled="!!busy"
-        @click="selectedIds = []"
-        >{{ t('settingsPlugins.clear_selection') }}</UButton
-      >
-    </div>
-
-    <div
-      v-if="batchResults.length"
-      class="space-y-2 rounded-lg border border-default px-3 py-3"
-      data-testid="plugin-batch-results"
-      role="status"
-    >
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <p
-          class="text-xs font-medium"
-          :class="failedResults.length ? 'text-warning' : 'text-primary'"
-        >
-          {{
-            t('settingsPlugins.batch_summary', {
-              succeeded: batchResults.length - failedResults.length,
-              failed: failedResults.length,
-            })
-          }}
-        </p>
+      <template #actions>
         <div class="flex gap-2">
           <UButton
-            v-if="failedResults.length"
-            size="xs"
+            size="sm"
+            color="neutral"
+            variant="ghost"
+            icon="i-tabler-refresh"
+            :disabled="loading || !!busy"
+            @click="refresh(true)"
+            >{{ t('common.refresh') }}</UButton
+          >
+          <UButton
+            size="sm"
+            icon="i-tabler-plus"
+            data-testid="plugin-import"
+            :loading="busy === 'import'"
+            :disabled="!!busy"
+            @click="importPlugin"
+            >{{ t('settingsPlugins.import') }}</UButton
+          >
+        </div>
+      </template>
+      <div class="space-y-4">
+        <UAlert
+          v-if="failure"
+          color="error"
+          variant="soft"
+          :title="t('settingsPlugins.failed')"
+          :description="failure"
+          role="alert"
+        />
+        <UAlert
+          v-if="restartRequired"
+          color="warning"
+          variant="soft"
+          icon="i-tabler-refresh"
+          :title="t('settingsPlugins.restart_title')"
+          :description="t('settingsPlugins.restart_hint')"
+        />
+
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div
+            class="flex flex-wrap gap-1"
+            role="group"
+            :aria-label="t('settingsPlugins.filter_label')"
+          >
+            <UButton
+              v-for="option in filters"
+              :key="option.key"
+              size="sm"
+              :color="filter === option.key ? 'primary' : 'neutral'"
+              :variant="filter === option.key ? 'soft' : 'ghost'"
+              :aria-pressed="filter === option.key"
+              @click="filter = option.key"
+            >
+              {{ t(option.label) }} <span class="ml-1 tabular-nums">{{ option.count }}</span>
+            </UButton>
+          </div>
+          <UInput
+            v-model="query"
+            icon="i-tabler-search"
+            class="w-full sm:w-64"
+            :placeholder="t('settingsPlugins.search')"
+            :aria-label="t('settingsPlugins.search')"
+            data-testid="plugin-search"
+          />
+        </div>
+
+        <div
+          v-if="selectedIds.length"
+          class="flex flex-wrap items-center gap-2 rounded-lg border border-primary/25 bg-primary/5 px-3 py-2"
+          data-testid="plugin-bulk-toolbar"
+        >
+          <div class="mr-auto min-w-0 text-xs">
+            <span class="font-medium text-highlighted">{{
+              t('settingsPlugins.selected', { count: selectedIds.length })
+            }}</span>
+            <span v-if="hiddenSelected" class="ml-2 text-muted">{{
+              t('settingsPlugins.hidden_selected', { count: hiddenSelected })
+            }}</span>
+          </div>
+          <UButton
+            size="sm"
             color="neutral"
             variant="soft"
+            data-testid="plugin-bulk-enable"
+            :loading="busy === 'batch:enable'"
             :disabled="!!busy"
-            @click="
-              runBatch(
-                lastAction,
-                failedResults.map((result) => result.id),
-              )
-            "
-            >{{ t('settingsPlugins.retry_failed') }}</UButton
+            @click="runBatch('enable')"
+            >{{ t('settingsPlugins.enable') }}</UButton
           >
-          <UButton size="xs" color="neutral" variant="ghost" @click="batchResults = []">{{
-            t('common.close')
-          }}</UButton>
+          <UButton
+            size="sm"
+            color="neutral"
+            variant="soft"
+            data-testid="plugin-bulk-disable"
+            :loading="busy === 'batch:disable'"
+            :disabled="!!busy"
+            @click="runBatch('disable')"
+            >{{ t('settingsPlugins.disable') }}</UButton
+          >
+          <UButton
+            size="sm"
+            color="error"
+            variant="soft"
+            data-testid="plugin-bulk-uninstall"
+            :loading="busy === 'batch:uninstall'"
+            :disabled="!!busy"
+            @click="runBatch('uninstall')"
+            >{{ t('settingsPlugins.uninstall') }}</UButton
+          >
+          <UButton
+            size="sm"
+            color="neutral"
+            variant="ghost"
+            :disabled="!!busy"
+            @click="selectedIds = []"
+            >{{ t('settingsPlugins.clear_selection') }}</UButton
+          >
+        </div>
+
+        <div
+          v-if="batchResults.length"
+          class="space-y-2 rounded-lg border border-default px-3 py-3"
+          data-testid="plugin-batch-results"
+          role="status"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <p
+              class="text-xs font-medium"
+              :class="failedResults.length ? 'text-warning' : 'text-primary'"
+            >
+              {{
+                t('settingsPlugins.batch_summary', {
+                  succeeded: batchResults.length - failedResults.length,
+                  failed: failedResults.length,
+                })
+              }}
+            </p>
+            <div class="flex gap-2">
+              <UButton
+                v-if="failedResults.length"
+                size="xs"
+                color="neutral"
+                variant="soft"
+                :disabled="!!busy"
+                @click="
+                  runBatch(
+                    lastAction,
+                    failedResults.map((result) => result.id),
+                  )
+                "
+                >{{ t('settingsPlugins.retry_failed') }}</UButton
+              >
+              <UButton size="xs" color="neutral" variant="ghost" @click="batchResults = []">{{
+                t('common.close')
+              }}</UButton>
+            </div>
+          </div>
+          <ul v-if="failedResults.length" class="space-y-2 text-xs">
+            <li v-for="result in failedResults" :key="result.id" class="space-y-1">
+              <span class="font-medium text-highlighted">{{
+                resultNames[result.id] || result.id
+              }}</span>
+              <p class="break-words text-muted">{{ batchError(result) }}</p>
+            </li>
+          </ul>
+        </div>
+
+        <p v-if="loading" class="py-8 text-sm text-muted" role="status">
+          {{ t('common.loading') }}
+        </p>
+        <div
+          v-else-if="!items.length"
+          class="space-y-2 rounded-lg border border-dashed border-default py-12 text-center"
+        >
+          <UIcon name="i-tabler-puzzle" class="size-8 text-muted" />
+          <h3 class="text-sm font-medium text-highlighted">{{ t('settingsPlugins.empty') }}</h3>
+          <p class="text-xs text-muted">{{ t('settingsPlugins.empty_hint') }}</p>
+        </div>
+        <div v-else class="overflow-x-auto rounded-lg border border-default">
+          <table class="w-full text-left text-xs" :aria-label="t('settingsPlugins.table_label')">
+            <thead class="border-b border-default bg-elevated/60 text-muted">
+              <tr>
+                <th scope="col" class="w-10 px-3 py-3">
+                  <UCheckbox
+                    :model-value="visibleSelection"
+                    :disabled="!!busy || !visibleItems.length"
+                    :aria-label="t('settingsPlugins.select_visible')"
+                    data-testid="plugin-select-all"
+                    @update:model-value="selectVisible($event === true)"
+                  />
+                </th>
+                <th scope="col" class="px-2 py-3 font-medium">
+                  {{ t('settingsPlugins.column_plugin') }}
+                </th>
+                <th scope="col" class="w-32 px-3 py-3 font-medium">
+                  {{ t('settingsPlugins.column_status') }}
+                </th>
+                <th scope="col" class="w-44 px-3 py-3 text-right font-medium">
+                  {{ t('settingsPlugins.column_actions') }}
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-default">
+              <template v-for="item in visibleItems" :key="item.id">
+                <tr
+                  data-testid="plugin-item"
+                  :data-plugin-id="item.id"
+                  :aria-selected="selected.has(item.id)"
+                  :class="selected.has(item.id) ? 'bg-primary/5' : 'hover:bg-elevated/30'"
+                >
+                  <td class="px-3 py-4 align-top">
+                    <UCheckbox
+                      :model-value="selected.has(item.id)"
+                      :disabled="!!busy"
+                      :aria-label="t('settingsPlugins.select_plugin', { name: item.name })"
+                      @update:model-value="toggleSelection(item.id, $event === true)"
+                    />
+                  </td>
+                  <td class="min-w-44 max-w-md px-2 py-4">
+                    <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                      <button
+                        type="button"
+                        class="break-words text-left text-sm font-semibold text-highlighted hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+                        :aria-expanded="expanded.has(item.id)"
+                        @click="toggleDetails(item.id)"
+                      >
+                        {{ item.name }}
+                      </button>
+                      <span class="text-muted">v{{ item.version }}</span>
+                    </div>
+                    <p class="mt-1 line-clamp-2 leading-5 text-muted">{{ item.description }}</p>
+                    <p class="mt-1 text-muted">
+                      {{
+                        t('settingsPlugins.contributions', {
+                          nodes: item.nodes.length,
+                          workflows: item.workflows.length,
+                        })
+                      }}
+                    </p>
+                  </td>
+                  <td class="px-3 py-4 align-top">
+                    <UBadge
+                      size="sm"
+                      :color="item.enabled ? 'primary' : 'neutral'"
+                      variant="soft"
+                      >{{
+                        t(item.enabled ? 'settingsPlugins.enabled' : 'settingsPlugins.disabled')
+                      }}</UBadge
+                    >
+                    <p
+                      class="mt-2 leading-5"
+                      :class="item.restartRequired ? 'text-warning' : 'text-muted'"
+                    >
+                      {{
+                        t(
+                          item.restartRequired
+                            ? 'settingsPlugins.filter_pending'
+                            : item.loaded
+                              ? 'settingsPlugins.loaded'
+                              : 'settingsPlugins.not_loaded',
+                        )
+                      }}
+                    </p>
+                    <span v-if="inUse(item)" class="text-warning">{{
+                      t('settingsPlugins.active_run')
+                    }}</span>
+                  </td>
+                  <td class="px-3 py-4 align-top">
+                    <div class="flex flex-wrap justify-end gap-1">
+                      <UButton
+                        size="xs"
+                        color="neutral"
+                        variant="soft"
+                        :disabled="!!busy || inUse(item)"
+                        @click="
+                          perform(item.id, () => pluginBackend.setEnabled(item.id, !item.enabled))
+                        "
+                        >{{
+                          t(item.enabled ? 'settingsPlugins.disable' : 'settingsPlugins.enable')
+                        }}</UButton
+                      >
+                      <UButton
+                        size="xs"
+                        color="neutral"
+                        variant="ghost"
+                        :aria-expanded="expanded.has(item.id)"
+                        @click="toggleDetails(item.id)"
+                        >{{
+                          t(
+                            expanded.has(item.id)
+                              ? 'settingsPlugins.collapse'
+                              : 'settingsPlugins.details',
+                          )
+                        }}</UButton
+                      >
+                      <UButton
+                        size="xs"
+                        color="error"
+                        variant="ghost"
+                        :disabled="!!busy || inUse(item)"
+                        @click="uninstall(item)"
+                        >{{ t('settingsPlugins.uninstall') }}</UButton
+                      >
+                    </div>
+                  </td>
+                </tr>
+                <tr
+                  v-if="expanded.has(item.id)"
+                  class="bg-elevated/25"
+                  data-testid="plugin-details"
+                >
+                  <td colspan="4" class="px-5 py-4">
+                    <PluginDetails
+                      :item="item"
+                      :busy="!!busy"
+                      @rollback="perform(item.id, () => pluginBackend.rollback(item.id))"
+                      @control="
+                        (id, start) =>
+                          perform(item.id, () => pluginBackend.control(item.id, id, start))
+                      "
+                    />
+                  </td>
+                </tr>
+              </template>
+              <tr v-if="!visibleItems.length">
+                <td colspan="4" class="space-y-3 py-10 text-center text-muted">
+                  <p>{{ t('settingsPlugins.no_matches') }}</p>
+                  <UButton size="xs" color="neutral" variant="soft" @click="resetFilters">{{
+                    t('settingsPlugins.reset_filters')
+                  }}</UButton>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-      <ul v-if="failedResults.length" class="space-y-2 text-xs">
-        <li v-for="result in failedResults" :key="result.id" class="space-y-1">
-          <span class="font-medium text-highlighted">{{
-            resultNames[result.id] || result.id
-          }}</span>
-          <p class="break-words text-muted">{{ batchError(result) }}</p>
-        </li>
-      </ul>
-    </div>
-
-    <p v-if="loading" class="py-8 text-sm text-muted" role="status">{{ t('common.loading') }}</p>
-    <div
-      v-else-if="!items.length"
-      class="space-y-2 rounded-lg border border-dashed border-default py-12 text-center"
-    >
-      <UIcon name="i-tabler-puzzle" class="size-8 text-muted" />
-      <h3 class="text-sm font-medium text-highlighted">{{ t('settingsPlugins.empty') }}</h3>
-      <p class="text-xs text-muted">{{ t('settingsPlugins.empty_hint') }}</p>
-    </div>
-    <div v-else class="overflow-x-auto rounded-lg border border-default">
-      <table class="w-full text-left text-xs" :aria-label="t('settingsPlugins.table_label')">
-        <thead class="border-b border-default bg-elevated/60 text-muted">
-          <tr>
-            <th scope="col" class="w-10 px-3 py-3">
-              <UCheckbox
-                :model-value="visibleSelection"
-                :disabled="!!busy || !visibleItems.length"
-                :aria-label="t('settingsPlugins.select_visible')"
-                data-testid="plugin-select-all"
-                @update:model-value="selectVisible($event === true)"
-              />
-            </th>
-            <th scope="col" class="px-2 py-3 font-medium">
-              {{ t('settingsPlugins.column_plugin') }}
-            </th>
-            <th scope="col" class="w-32 px-3 py-3 font-medium">
-              {{ t('settingsPlugins.column_status') }}
-            </th>
-            <th scope="col" class="w-44 px-3 py-3 text-right font-medium">
-              {{ t('settingsPlugins.column_actions') }}
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-default">
-          <template v-for="item in visibleItems" :key="item.id">
-            <tr
-              data-testid="plugin-item"
-              :data-plugin-id="item.id"
-              :aria-selected="selected.has(item.id)"
-              :class="selected.has(item.id) ? 'bg-primary/5' : 'hover:bg-elevated/30'"
-            >
-              <td class="px-3 py-4 align-top">
-                <UCheckbox
-                  :model-value="selected.has(item.id)"
-                  :disabled="!!busy"
-                  :aria-label="t('settingsPlugins.select_plugin', { name: item.name })"
-                  @update:model-value="toggleSelection(item.id, $event === true)"
-                />
-              </td>
-              <td class="min-w-44 max-w-md px-2 py-4">
-                <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                  <button
-                    type="button"
-                    class="break-words text-left text-sm font-semibold text-highlighted hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
-                    :aria-expanded="expanded.has(item.id)"
-                    @click="toggleDetails(item.id)"
-                  >
-                    {{ item.name }}
-                  </button>
-                  <span class="text-muted">v{{ item.version }}</span>
-                </div>
-                <p class="mt-1 line-clamp-2 leading-5 text-muted">{{ item.description }}</p>
-                <p class="mt-1 text-muted">
-                  {{
-                    t('settingsPlugins.contributions', {
-                      nodes: item.nodes.length,
-                      workflows: item.workflows.length,
-                    })
-                  }}
-                </p>
-              </td>
-              <td class="px-3 py-4 align-top">
-                <UBadge size="sm" :color="item.enabled ? 'primary' : 'neutral'" variant="soft">{{
-                  t(item.enabled ? 'settingsPlugins.enabled' : 'settingsPlugins.disabled')
-                }}</UBadge>
-                <p
-                  class="mt-2 leading-5"
-                  :class="item.restartRequired ? 'text-warning' : 'text-muted'"
-                >
-                  {{
-                    t(
-                      item.restartRequired
-                        ? 'settingsPlugins.filter_pending'
-                        : item.loaded
-                          ? 'settingsPlugins.loaded'
-                          : 'settingsPlugins.not_loaded',
-                    )
-                  }}
-                </p>
-                <span v-if="inUse(item)" class="text-warning">{{
-                  t('settingsPlugins.active_run')
-                }}</span>
-              </td>
-              <td class="px-3 py-4 align-top">
-                <div class="flex flex-wrap justify-end gap-1">
-                  <UButton
-                    size="xs"
-                    color="neutral"
-                    variant="soft"
-                    :disabled="!!busy || inUse(item)"
-                    @click="
-                      perform(item.id, () => pluginBackend.setEnabled(item.id, !item.enabled))
-                    "
-                    >{{
-                      t(item.enabled ? 'settingsPlugins.disable' : 'settingsPlugins.enable')
-                    }}</UButton
-                  >
-                  <UButton
-                    size="xs"
-                    color="neutral"
-                    variant="ghost"
-                    :aria-expanded="expanded.has(item.id)"
-                    @click="toggleDetails(item.id)"
-                    >{{
-                      t(
-                        expanded.has(item.id)
-                          ? 'settingsPlugins.collapse'
-                          : 'settingsPlugins.details',
-                      )
-                    }}</UButton
-                  >
-                  <UButton
-                    size="xs"
-                    color="error"
-                    variant="ghost"
-                    :disabled="!!busy || inUse(item)"
-                    @click="uninstall(item)"
-                    >{{ t('settingsPlugins.uninstall') }}</UButton
-                  >
-                </div>
-              </td>
-            </tr>
-            <tr v-if="expanded.has(item.id)" class="bg-elevated/25" data-testid="plugin-details">
-              <td colspan="4" class="px-5 py-4">
-                <PluginDetails
-                  :item="item"
-                  :busy="!!busy"
-                  @rollback="perform(item.id, () => pluginBackend.rollback(item.id))"
-                  @control="
-                    (id, start) => perform(item.id, () => pluginBackend.control(item.id, id, start))
-                  "
-                />
-              </td>
-            </tr>
-          </template>
-          <tr v-if="!visibleItems.length">
-            <td colspan="4" class="space-y-3 py-10 text-center text-muted">
-              <p>{{ t('settingsPlugins.no_matches') }}</p>
-              <UButton size="xs" color="neutral" variant="soft" @click="resetFilters">{{
-                t('settingsPlugins.reset_filters')
-              }}</UButton>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    </SettingsSection>
   </section>
 </template>
 
@@ -347,6 +361,7 @@ import { errorMessage, RPCError } from '@/lib/invoke'
 import { useConfirm } from '@/composables/useConfirm'
 import { useSettingsStore } from '@/stores/settings'
 import PluginDetails from './PluginDetails.vue'
+import SettingsSection from '@/components/settings/SettingsSection.vue'
 
 const { t } = useI18n()
 const { confirm } = useConfirm()

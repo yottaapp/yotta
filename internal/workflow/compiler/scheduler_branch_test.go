@@ -93,7 +93,7 @@ func newBranchFixture(t *testing.T) branchFixture {
 		edge("exec", "main", id, id, "in")
 		edge("data", "main", "value", id, "value")
 	}
-	source, err := json.Marshal(map[string]any{"format": "yotta.workflow", "version": "1", "workflow": map[string]string{"id": "wf-branches", "name": "Branches"}, "revision": 0, "entryGraph": "main",
+	source, err := json.Marshal(map[string]any{"format": "yotta.workflow", "version": "5", "workflow": map[string]string{"id": "wf-branches", "name": "Branches"}, "revision": 0, "entryGraph": "main",
 		"graphs": []any{map[string]any{"id": "main", "kind": "main", "nodes": nodes, "edges": edges, "inputs": []any{}, "outputs": []any{}}}, "variables": []any{}, "resources": []any{}, "targetProfileDefinitions": []any{}, "credentialRequirements": []any{}, "dependencies": []any{}})
 	if err != nil {
 		t.Fatal(err)

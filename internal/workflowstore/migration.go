@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/yottaapp/yotta/internal/artifact"
 	"github.com/yottaapp/yotta/internal/workflow/schema"
 )
 
@@ -39,7 +40,142 @@ type sourceMigrationPlan struct {
 // repair: a schema change after release must change format/version and add an
 // explicit deterministic step here.
 func currentSourceMigrationPlan() (sourceMigrationPlan, error) {
-	return newSourceMigrationPlan(sourceContract{Format: schema.Format, Version: schema.Version}, nil)
+	current := sourceContract{Format: schema.Format, Version: schema.Version}
+	return newSourceMigrationPlan(current, []sourceMigrationStep{{
+		From: sourceContract{Format: schema.Format, Version: "1"}, To: current,
+		Apply: migrateSourceParameters,
+	}, {From: sourceContract{Format: schema.Format, Version: "2"}, To: current, Apply: migrateSourceParameterBlocks}, {From: sourceContract{Format: schema.Format, Version: "3"}, To: current, Apply: migrateSourceBlockDescriptions}, {From: sourceContract{Format: schema.Format, Version: "4"}, To: current, Apply: migrateSourceWorkflowTargets}})
+}
+
+func migrateSourceParameters(raw []byte) ([]byte, error) {
+	canonical, err := artifact.Canonicalize(raw)
+	if err != nil {
+		return nil, err
+	}
+	var document map[string]json.RawMessage
+	if err := json.Unmarshal(canonical, &document); err != nil {
+		return nil, err
+	}
+	var variables []map[string]json.RawMessage
+	if err := json.Unmarshal(document["variables"], &variables); err != nil {
+		return nil, err
+	}
+	for _, variable := range variables {
+		if _, exists := variable["parameter"]; exists {
+			return nil, errors.New("v1 source cannot declare parameters")
+		}
+	}
+	if _, exists := document["parameterBlocks"]; exists {
+		return nil, errors.New("legacy source cannot declare parameter blocks")
+	}
+	return upgradeParameterDocument(document)
+}
+
+func migrateSourceParameterBlocks(raw []byte) ([]byte, error) {
+	canonical, err := artifact.Canonicalize(raw)
+	if err != nil {
+		return nil, err
+	}
+	var document map[string]json.RawMessage
+	if err := json.Unmarshal(canonical, &document); err != nil {
+		return nil, err
+	}
+	if _, exists := document["parameterBlocks"]; exists {
+		return nil, errors.New("v2 source cannot declare parameter blocks")
+	}
+	return upgradeParameterDocument(document)
+}
+func migrateSourceBlockDescriptions(raw []byte) ([]byte, error) {
+	canonical, err := artifact.Canonicalize(raw)
+	if err != nil {
+		return nil, err
+	}
+	var document map[string]json.RawMessage
+	if err := json.Unmarshal(canonical, &document); err != nil {
+		return nil, err
+	}
+	var blocks []map[string]json.RawMessage
+	if rawBlocks, exists := document["parameterBlocks"]; exists {
+		if err := json.Unmarshal(rawBlocks, &blocks); err != nil {
+			return nil, err
+		}
+		for _, block := range blocks {
+			if _, exists := block["description"]; exists {
+				return nil, errors.New("v3 source cannot declare block descriptions")
+			}
+		}
+	}
+	return upgradeParameterDocument(document)
+}
+func migrateSourceWorkflowTargets(raw []byte) ([]byte, error) {
+	canonical, err := artifact.Canonicalize(raw)
+	if err != nil {
+		return nil, err
+	}
+	var document map[string]json.RawMessage
+	if err = json.Unmarshal(canonical, &document); err != nil {
+		return nil, err
+	}
+	return upgradeParameterDocument(document)
+}
+func upgradeParameterDocument(document map[string]json.RawMessage) ([]byte, error) {
+	document["version"], _ = json.Marshal(schema.Version)
+	updated, err := json.Marshal(document)
+	if err != nil {
+		return nil, err
+	}
+	if _, exists := document["targets"]; exists {
+		return nil, errors.New("legacy source cannot declare workflow targets")
+	}
+	// Validate before typed decoding: otherwise unknown graph/node fields and
+	// invalid values can disappear during the migration round trip.
+	targetSource, diagnostics := schema.ParseSource(updated)
+	if schema.HasErrors(diagnostics) {
+		return nil, &InvalidSourceError{Diagnostics: diagnostics}
+	}
+	if _, err := transformLegacyTargets(&targetSource); err != nil {
+		return nil, err
+	}
+	document["targets"], _ = json.Marshal(targetSource.Targets)
+	document["targetDefaults"], _ = json.Marshal(targetSource.TargetDefaults)
+	// Rewrite only the references; retain exact JSON numbers and other config.
+	var graphs []map[string]json.RawMessage
+	if err := json.Unmarshal(document["graphs"], &graphs); err != nil {
+		return nil, err
+	}
+	for gi := range graphs {
+		var nodes []map[string]json.RawMessage
+		if err := json.Unmarshal(graphs[gi]["nodes"], &nodes); err != nil {
+			return nil, err
+		}
+		for ni := range nodes {
+			node := targetSource.Graphs[gi].Nodes[ni]
+			if legacyTargetKind(node.NodeRef.NodeTypeID) == "" {
+				continue
+			}
+			slot, ok := node.Config["slot"].(string)
+			if !ok || slot == "" {
+				continue
+			}
+			var config map[string]json.RawMessage
+			if err := json.Unmarshal(nodes[ni]["config"], &config); err != nil {
+				return nil, err
+			}
+			config["slot"], _ = json.Marshal(slot)
+			nodes[ni]["config"], _ = json.Marshal(config)
+		}
+		graphs[gi]["nodes"], _ = json.Marshal(nodes)
+	}
+	document["graphs"], _ = json.Marshal(graphs)
+	updated, err = json.Marshal(document)
+	if err != nil {
+		return nil, err
+	}
+	_, diagnostics = schema.ParseSource(updated)
+	if schema.HasErrors(diagnostics) {
+		return nil, &InvalidSourceError{Diagnostics: diagnostics}
+	}
+	return updated, nil
 }
 
 // MigrateSourceArtifact is the shared read seam for durable stores and

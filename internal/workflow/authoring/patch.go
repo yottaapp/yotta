@@ -46,6 +46,8 @@ const (
 	CommandSetTargetDefault       CommandKind = "set-target-default"
 	CommandClearTargetDefault     CommandKind = "clear-target-default"
 	CommandAddStateVariable       CommandKind = "add-state-variable"
+	CommandSetWorkflowTargets     CommandKind = "set-workflow-targets"
+	CommandSetParameterBlocks     CommandKind = "set-parameter-blocks"
 	CommandUpdateStateVariable    CommandKind = "update-state-variable"
 	CommandRemoveStateVariable    CommandKind = "remove-state-variable"
 	CommandAddNode                CommandKind = "add-node"
@@ -85,12 +87,14 @@ const (
 // it must match Kind; this is checked again inside Engine.Apply for every
 // caller, including Wails and MCP decoders.
 type Command struct {
+	SetWorkflowTargets     *SetWorkflowTargetsCommand     `json:"setWorkflowTargets,omitempty"`
 	Kind                   CommandKind                    `json:"kind"`
 	RenameWorkflow         *RenameWorkflowCommand         `json:"renameWorkflow,omitempty"`
 	UpdateWorkflowMetadata *UpdateWorkflowMetadataCommand `json:"updateWorkflowMetadata,omitempty"`
 	SetTargetDefault       *SetTargetDefaultCommand       `json:"setTargetDefault,omitempty"`
 	ClearTargetDefault     *ClearTargetDefaultCommand     `json:"clearTargetDefault,omitempty"`
 	AddStateVariable       *AddStateVariableCommand       `json:"addStateVariable,omitempty"`
+	SetParameterBlocks     *SetParameterBlocksCommand     `json:"setParameterBlocks,omitempty"`
 	UpdateStateVariable    *UpdateStateVariableCommand    `json:"updateStateVariable,omitempty"`
 	RemoveStateVariable    *RemoveStateVariableCommand    `json:"removeStateVariable,omitempty"`
 	AddNode                *AddNodeCommand                `json:"addNode,omitempty"`
@@ -193,15 +197,26 @@ type ClearTargetDefaultCommand struct {
 }
 
 type AddStateVariableCommand struct {
-	Name    string                  `json:"name"`
-	Type    datatype.TypeExpression `json:"type"`
-	Default any                     `json:"default"`
+	Parameter *schema.Parameter       `json:"parameter,omitempty"`
+	Name      string                  `json:"name"`
+	Type      datatype.TypeExpression `json:"type"`
+	Default   any                     `json:"default"`
+}
+
+type SetWorkflowTargetsCommand struct {
+	Targets []schema.WorkflowTarget `json:"targets" jsonschema:"required,minItems=1,maxItems=64"`
+}
+
+type SetParameterBlocksCommand struct {
+	Blocks []schema.ParameterBlock `json:"blocks" jsonschema:"required,maxItems=4096"`
 }
 
 type UpdateStateVariableCommand struct {
-	Name    string                  `json:"name"`
-	Type    datatype.TypeExpression `json:"type"`
-	Default any                     `json:"default"`
+	Parameter      *schema.Parameter       `json:"parameter,omitempty"`
+	ClearParameter bool                    `json:"clearParameter,omitempty"`
+	Name           string                  `json:"name"`
+	Type           datatype.TypeExpression `json:"type"`
+	Default        any                     `json:"default"`
 }
 
 type RemoveStateVariableCommand struct {
@@ -616,7 +631,42 @@ func (e *Engine) applyCommand(source *schema.WorkflowSource, command Command, in
 		if err != nil {
 			return patchError(index, "INVALID_STATE_DEFAULT", err.Error())
 		}
-		source.Variables = append(source.Variables, schema.Variable{Name: payload.Name, Type: payload.Type, Default: value})
+		source.Variables = append(source.Variables, schema.Variable{Name: payload.Name, Type: payload.Type, Default: value, Parameter: payload.Parameter})
+	case CommandSetWorkflowTargets:
+		next := command.SetWorkflowTargets.Targets
+		if len(next) == 0 {
+			return patchError(index, "INVALID_TARGET", "workflow requires one default target")
+		}
+		if err := schema.ValidateWorkflowTargets(next); err != nil {
+			return patchError(index, "INVALID_TARGET", err.Error())
+		}
+		for _, old := range source.Targets {
+			retained := false
+			for _, item := range next {
+				if item.ID == old.ID {
+					retained = true
+				}
+			}
+			if !retained {
+				for _, graph := range source.Graphs {
+					for _, node := range graph.Nodes {
+						if e.referencesWorkflowTarget(node, old.ID) {
+							return patchError(index, "REFERENCE_IN_USE", "workflow target is referenced by a node")
+						}
+					}
+				}
+			}
+		}
+		source.Targets = next
+		for _, item := range next {
+			if item.Default {
+				if err := schema.SetTargetDefault(source, "target", item.ID); err != nil {
+					return patchError(index, "INVALID_TARGET", err.Error())
+				}
+			}
+		}
+	case CommandSetParameterBlocks:
+		source.ParameterBlocks = command.SetParameterBlocks.Blocks
 	case CommandUpdateStateVariable:
 		payload := command.UpdateStateVariable
 		if !hasStateVariable(*source, payload.Name) {
@@ -633,6 +683,11 @@ func (e *Engine) applyCommand(source *schema.WorkflowSource, command Command, in
 			if source.Variables[variableIndex].Name == payload.Name {
 				source.Variables[variableIndex].Type = payload.Type
 				source.Variables[variableIndex].Default = value
+				if payload.ClearParameter {
+					source.Variables[variableIndex].Parameter = nil
+				} else if payload.Parameter != nil {
+					source.Variables[variableIndex].Parameter = payload.Parameter
+				}
 				break
 			}
 		}
@@ -1173,6 +1228,8 @@ func (e *Engine) applyCommand(source *schema.WorkflowSource, command Command, in
 
 func validateTaggedCommand(command Command) error {
 	payloads := []bool{
+		command.SetWorkflowTargets != nil,
+		command.SetParameterBlocks != nil,
 		command.RenameWorkflow != nil, command.UpdateWorkflowMetadata != nil,
 		command.SetTargetDefault != nil, command.ClearTargetDefault != nil,
 		command.AddStateVariable != nil, command.UpdateStateVariable != nil, command.RemoveStateVariable != nil,
@@ -1198,7 +1255,9 @@ func validateTaggedCommand(command Command) error {
 		return errors.New("command must contain exactly one payload")
 	}
 	matches := map[CommandKind]bool{
-		CommandRenameWorkflow: command.RenameWorkflow != nil, CommandAddStateVariable: command.AddStateVariable != nil,
+		CommandSetWorkflowTargets: command.SetWorkflowTargets != nil,
+		CommandSetParameterBlocks: command.SetParameterBlocks != nil,
+		CommandRenameWorkflow:     command.RenameWorkflow != nil, CommandAddStateVariable: command.AddStateVariable != nil,
 		CommandUpdateWorkflowMetadata: command.UpdateWorkflowMetadata != nil,
 		CommandSetTargetDefault:       command.SetTargetDefault != nil, CommandClearTargetDefault: command.ClearTargetDefault != nil,
 		CommandUpdateStateVariable: command.UpdateStateVariable != nil,
@@ -2050,4 +2109,22 @@ func countResourceReferences(source schema.WorkflowSource, resourceID string) in
 
 func finitePosition(position schema.Position) bool {
 	return !math.IsNaN(position.X) && !math.IsInf(position.X, 0) && !math.IsNaN(position.Y) && !math.IsInf(position.Y, 0)
+}
+
+func (e *Engine) referencesWorkflowTarget(node schema.Node, id string) bool {
+	projection, ok := instanceProjection(e.projection, node)
+	if !ok { // Preserve references of an unavailable plugin until its contract can be resolved.
+		for _, value := range node.Config {
+			if slot, ok := value.(string); ok && slot == id {
+				return true
+			}
+		}
+		return false
+	}
+	for _, target := range projection.ConfiguredTargets {
+		if slot, _ := node.Config[target.SlotConfigKey].(string); slot == id {
+			return true
+		}
+	}
+	return false
 }

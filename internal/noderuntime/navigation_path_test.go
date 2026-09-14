@@ -33,7 +33,7 @@ func TestPathNodesCompileAndPreserveTypedPointIdentity(t *testing.T) {
 	edge := func(from, to, in string) map[string]any {
 		return map[string]any{"channel": "data", "from": map[string]string{"nodeId": from, "portId": "result"}, "to": map[string]string{"nodeId": to, "portId": in}}
 	}
-	source := map[string]any{"format": "yotta.workflow", "version": "1", "workflow": map[string]string{"id": "path-test", "name": "Path test"}, "revision": 0, "entryGraph": "main", "graphs": []any{map[string]any{"id": "main", "kind": "main", "nodes": []any{
+	source := map[string]any{"format": "yotta.workflow", "version": "5", "workflow": map[string]string{"id": "path-test", "name": "Path test"}, "revision": 0, "entryGraph": "main", "graphs": []any{map[string]any{"id": "main", "kind": "main", "nodes": []any{
 		node("make", "make-path", map[string]any{"reference": reference, "points": points}),
 		node("reverse", "reverse-path", map[string]any{}), node("get", "path-point", map[string]any{"index": 0}),
 	}, "edges": []any{edge("make", "reverse", "path"), edge("reverse", "get", "path")}, "inputs": []any{}, "outputs": []any{}}}, "variables": []any{}, "resources": []any{}, "targetProfileDefinitions": []any{}, "credentialRequirements": []any{}, "dependencies": []any{}}

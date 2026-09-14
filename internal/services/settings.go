@@ -14,19 +14,28 @@ import (
 	"github.com/yottaapp/yotta/internal/artifact"
 	automationinstalled "github.com/yottaapp/yotta/internal/automation/installed"
 	"github.com/yottaapp/yotta/internal/httpegress"
+	"github.com/yottaapp/yotta/internal/serviceconfig"
 	"github.com/yottaapp/yotta/pkg/locale"
 )
 
 // Settings 是持久化层 schema。
 type Settings struct {
-	UI           UISettings          `json:"ui"`
-	Locale       string              `json:"locale"`  // "zh" | "en"；i18n 口子，目前默认且仅 zh
-	Capture      CaptureSettings     `json:"capture"` // 截屏后端选择
-	AI           AISettings          `json:"ai"`
-	MCP          MCPSettings         `json:"mcp"`
-	Network      NetworkSettings     `json:"network"`
-	Applications ApplicationSettings `json:"applications"`
-	Automation   AutomationSettings  `json:"automation"`
+	OnlineServices OnlineServiceSettings `json:"onlineServices"`
+	UI             UISettings            `json:"ui"`
+	Locale         string                `json:"locale"`  // "zh" | "en"；i18n 口子，目前默认且仅 zh
+	Capture        CaptureSettings       `json:"capture"` // 截屏后端选择
+	AI             AISettings            `json:"ai"`
+	MCP            MCPSettings           `json:"mcp"`
+	Network        NetworkSettings       `json:"network"`
+	Applications   ApplicationSettings   `json:"applications"`
+	Automation     AutomationSettings    `json:"automation"`
+}
+
+// OnlineServiceSettings overrides build defaults on the next desktop startup.
+// Empty addresses retain the configured defaults; these are local settings.
+type OnlineServiceSettings struct {
+	HubURL      string `json:"hubURL"`
+	RegistryURL string `json:"registryURL"`
 }
 
 type AISettings struct {
@@ -484,6 +493,13 @@ func (s *Settings) Validate() error {
 	}
 	if err := s.Network.validate(); err != nil {
 		return err
+	}
+	for _, field := range []*string{&s.OnlineServices.HubURL, &s.OnlineServices.RegistryURL} {
+		value, err := serviceconfig.NormalizeEndpoint(*field)
+		if err != nil {
+			return fmt.Errorf("onlineServices: %w", err)
+		}
+		*field = value
 	}
 	if err := s.Applications.validate(); err != nil {
 		return err

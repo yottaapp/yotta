@@ -84,7 +84,10 @@
         }}
       </UBadge>
       <span v-if="inheritedTarget && !hasOverride" class="truncate text-muted">
-        {{ inheritedTarget }}
+        {{
+          workflowTargets?.targets.value.find((target) => target.id === inheritedTarget)?.name ??
+          inheritedTarget
+        }}
       </span>
       <UButton
         v-if="hasOverride && inheritedTarget"
@@ -101,11 +104,20 @@
       class="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2"
     >
       <p class="min-w-0 flex-1 text-[11px] leading-5 text-warning">
-        {{ t('workflow.inspector.no_installed_target') }}
+        {{
+          t(
+            roleTarget
+              ? 'workflow.settings_panel.missing'
+              : 'workflow.inspector.no_installed_target',
+          )
+        }}
       </p>
       <UButton
-        :to="{ path: '/settings', query: { section: targetSettingsSection } }"
+        :to="
+          roleTarget ? undefined : { path: '/settings', query: { section: targetSettingsSection } }
+        "
         :label="t('workflow.inspector.configure_target')"
+        @click="roleTarget && workflowTargets?.openSettings()"
         icon="i-tabler-settings"
         color="warning"
         variant="soft"
@@ -143,8 +155,9 @@
 </template>
 
 <script setup lang="ts">
+import { WORKFLOW_TARGETS, isWorkflowTargetKind, targetAcceptsKinds } from './workflowTargets'
 import PositionSourceField from './PositionSourceField.vue'
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type {
   TargetDefault,
@@ -179,6 +192,10 @@ const emit = defineEmits<{
   'locate-resource': [location: ResourceLocation]
 }>()
 const { t, te } = useI18n()
+const workflowTargets = inject(WORKFLOW_TARGETS, undefined)
+const roleTarget = computed(() =>
+  Boolean(workflowTargets && isWorkflowTargetKind(targetCapability.value?.targetKinds ?? [])),
+)
 const settingsStore = useSettingsStore()
 const configFieldID = computed(() => (props.item.kind === 'config' ? props.item.field.id : ''))
 type TargetBinding = ConfiguredTargetProjection | CapabilityProjection
@@ -193,7 +210,17 @@ const targetCapability = computed<TargetBinding | undefined>(
 )
 const inheritedTarget = computed(() => {
   const target = targetCapability.value?.targetSlot
-  return props.targetDefaults.find((candidate) => candidate.target === target)?.slot ?? ''
+  const slot =
+    props.targetDefaults.find((candidate) => candidate.target === target)?.slot ??
+    (target === 'application'
+      ? props.targetDefaults.find((candidate) => candidate.target === 'target')?.slot
+      : '') ??
+    ''
+  if (workflowTargets && isWorkflowTargetKind(targetCapability.value?.targetKinds ?? [])) {
+    const role = workflowTargets.targets.value.find((candidate) => candidate.id === slot)
+    return role && targetAcceptsKinds(role, targetCapability.value!.targetKinds) ? slot : ''
+  }
+  return slot
 })
 const hasOverride = computed(() =>
   configFieldID.value
@@ -209,6 +236,10 @@ const effectiveConfigValue = computed(() => {
 const targetOptions = computed<Array<{ label: string; value: string }> | undefined>(() => {
   const capability = targetCapability.value
   if (!capability) return undefined
+  if (workflowTargets && isWorkflowTargetKind(capability.targetKinds))
+    return workflowTargets.targets.value
+      .filter((target) => targetAcceptsKinds(target, capability.targetKinds))
+      .map((target) => ({ label: target.name, value: target.id }))
   const settings = settingsStore.data
   if (!settings) return []
   if (

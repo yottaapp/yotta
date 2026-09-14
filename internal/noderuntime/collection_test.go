@@ -23,7 +23,7 @@ func TestCollectionTypeVariablesFreezeIntoProgramAndExecute(t *testing.T) {
 	get, _ := builtins.Definition(nodes.ListGetNodeID)
 	concat, _ := builtins.Definition(nodes.ConcatNodeID)
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-collection","name":"Collection"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-collection","name":"Collection"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"split","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},
 			 "bindings":{"text":{"kind":"value","value":"a,节点"},"separator":{"kind":"value","value":","}}},
@@ -75,7 +75,7 @@ func TestUnresolvedCollectionVariableFailsAtCompileBoundary(t *testing.T) {
 	}
 	length, _ := builtins.Definition(nodes.ListLengthNodeID)
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-unresolved","name":"Unresolved"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-unresolved","name":"Unresolved"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[{
 			"id":"length","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}
 		}],"edges":[],"inputs":[],"outputs":[]}],"variables":[],"resources":[],"targetProfileDefinitions":[],"credentialRequirements":[],"dependencies":[]

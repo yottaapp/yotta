@@ -1,4 +1,16 @@
 export default {
+  settingsServices: {
+    title: '在线服务',
+    description:
+      '默认连接 Yotta 官网服务，也可填写本地测试服务地址。修改后重启应用生效。账户服务保持不变。',
+    hubURL: '市场地址',
+    registryURL: 'Registry 地址',
+    default_hint: '留空使用默认地址。支持 HTTPS，以及 localhost、127.0.0.1 或 [::1] 的 HTTP 地址。',
+    invalid: '请输入完整的 HTTPS 地址或本机 HTTP 地址，不要包含账号、密码、查询参数或 # 片段。',
+    restore: '恢复默认',
+    save: '保存服务地址',
+    saved: '已保存，重启应用后生效。切换服务后可能需要重新登录。',
+  },
   settingsPlugins: {
     location_state: '运行记录',
     location_state_hint: '工作流的执行记录、事件和输出保存在 runs.db 中。',
@@ -109,7 +121,7 @@ export default {
     },
     theme: {
       plugins: '管理节点扩展和后台服务，选择插件即可批量操作。',
-      general: '语言、启动、截屏与日志',
+      general: '语言、启动、截屏、日志与服务地址',
       hotkeys: '管理全局、录制与编辑器快捷键',
       input: '设置录制方式和鼠标校准档',
       launcher: '编排启动器内容与显示方式',

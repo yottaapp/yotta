@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/yottaapp/yotta/internal/runprepare"
 	"github.com/yottaapp/yotta/internal/targetruntime"
 	"github.com/yottaapp/yotta/internal/workflow/compiler"
+	"github.com/yottaapp/yotta/internal/workflow/schema"
 )
 
 type leasedAdmission struct {
@@ -86,9 +88,28 @@ func (a *Application) leaseRunTargets() (leasedAdmission, error) {
 	return leasedAdmission{providers: a.providers, targets: targets, release: release}, nil
 }
 
-func (a *Application) prepareRunImages(ctx context.Context, sourceJSON []byte, targets targetruntime.Snapshot) (runprepare.PreparedImages, error) {
+func (a *Application) prepareRunImages(ctx context.Context, sourceJSON []byte, targets targetruntime.Snapshot, program compiler.ProgramSnapshot) (runprepare.PreparedImages, error) {
 	if a.runImagePlanner == nil {
 		return runprepare.PreparedImages{}, nil
+	}
+	// Retain Source structure for the planner, but remove image usage from
+	// disconnected nodes using the compiler's source locations (including calls).
+	source, diagnostics := schema.ParseSource(sourceJSON)
+	if schema.HasErrors(diagnostics) {
+		return runprepare.PreparedImages{}, errors.New("invalid workflow source for image preparation")
+	}
+	active := activeSourceNodes(program)
+	for gi := range source.Graphs {
+		for ni := range source.Graphs[gi].Nodes {
+			node := &source.Graphs[gi].Nodes[ni]
+			if !active[source.Graphs[gi].ID][node.ID] {
+				node.Bindings = map[string]schema.InputBinding{}
+			}
+		}
+	}
+	sourceJSON, err := json.Marshal(source)
+	if err != nil {
+		return runprepare.PreparedImages{}, err
 	}
 	slots, err := runprepare.ReferencedTargetSlots(sourceJSON)
 	if err != nil {

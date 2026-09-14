@@ -337,7 +337,7 @@ func testSource(workflowID, name string, ref blob.BlobRef) []byte {
 		encoded, _ := json.Marshal(ref)
 		binding = `"asset":{"kind":"blob","blob":` + string(encoded) + `}`
 	}
-	return []byte(fmt.Sprintf(`{"format":"yotta.workflow","version":"1","workflow":{"id":%q,"name":%q},"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[{"id":"node_1","nodeRef":{"nodeTypeId":"https://schemas.yotta.dev/nodes/test","version":"1.0.0","semanticDigest":"sha256:%s"},"position":{"x":0,"y":0},"config":{},"bindings":{%s}}],"edges":[],"inputs":[],"outputs":[]}],"variables":[],"resources":[],"targetProfileDefinitions":[],"credentialRequirements":[],"dependencies":[]}`, workflowID, name, strings.Repeat("1", 64), binding))
+	return []byte(fmt.Sprintf(`{"format":"yotta.workflow","version":"5","workflow":{"id":%q,"name":%q},"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[{"id":"node_1","nodeRef":{"nodeTypeId":"https://schemas.yotta.dev/nodes/test","version":"1.0.0","semanticDigest":"sha256:%s"},"position":{"x":0,"y":0},"config":{},"bindings":{%s}}],"edges":[],"inputs":[],"outputs":[]}],"variables":[],"resources":[],"targetProfileDefinitions":[],"credentialRequirements":[],"dependencies":[]}`, workflowID, name, strings.Repeat("1", 64), binding))
 }
 
 func testResourceSource(workflowID, name string, ref blob.BlobRef) []byte {

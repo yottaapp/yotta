@@ -131,6 +131,7 @@
         >
       </SettingsRow>
     </SettingsSection>
+    <SettingsServiceAddresses />
   </div>
 </template>
 
@@ -145,6 +146,7 @@ import { setLocale, type Locale } from '@/i18n'
 import SettingsRestartBadge from '@/components/settings/SettingsRestartBadge.vue'
 import SettingsRow from '@/components/settings/SettingsRow.vue'
 import SettingsSection from '@/components/settings/SettingsSection.vue'
+import SettingsServiceAddresses from '@/components/settings/SettingsServiceAddresses.vue'
 import AdaptiveSelect from '@/components/common/AdaptiveSelect.vue'
 
 const { t } = useI18n()

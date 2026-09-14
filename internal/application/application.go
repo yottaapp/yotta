@@ -37,6 +37,7 @@ var (
 )
 
 type Config struct {
+	Parameters        *workflowstore.ParameterStore
 	NodePackages      []schema.NodePackageDependency
 	Catalog           nodecatalog.Snapshot
 	Authoring         nodeauthoring.Snapshot
@@ -200,6 +201,7 @@ const (
 )
 
 type Application struct {
+	parameters         *workflowstore.ParameterStore
 	pluginMu           sync.RWMutex
 	validatePlugins    func([]byte) ([]string, error)
 	prepareRunServices func(context.Context, []string, targetruntime.Snapshot) ([]string, error)
@@ -261,6 +263,9 @@ func New(config Config) (*Application, error) {
 	if config.Now == nil {
 		config.Now = time.Now
 	}
+	if config.Parameters == nil {
+		config.Parameters, _ = workflowstore.OpenParameterStore("")
+	}
 	authoringEngine, err := authoring.New(config.Catalog, config.Authoring, nil, config.NodePackages...)
 	if err != nil {
 		return nil, fmt.Errorf("construct authoring engine: %w", err)
@@ -275,7 +280,8 @@ func New(config Config) (*Application, error) {
 		compiler: compiler.New(config.CompilerBuild, config.ConfigValidators), blobVerifier: config.BlobVerifier,
 		runImagePlanner: config.RunImagePlanner,
 		sources:         config.Sources, programs: config.Programs, runs: config.Runs,
-		admitter: config.Admitter, providers: providers, targetSnapshot: config.TargetSnapshot, executor: config.Executor,
+		parameters: config.Parameters,
+		admitter:   config.Admitter, providers: providers, targetSnapshot: config.TargetSnapshot, executor: config.Executor,
 		resourceOptions: config.ResourceOptions, ownerCloseTimeout: config.OwnerCloseTimeout,
 		onRunEvent: config.OnRunEvent, onDebugEvent: config.OnDebugEvent,
 		now: config.Now, state: stateNew, wake: make(chan struct{}, 1),
@@ -409,6 +415,7 @@ func (a *Application) CreateSourceWithMetadata(ctx context.Context, requested au
 			Category: metadata.Category, Tags: metadata.Tags,
 		},
 		Revision: 0, EntryGraph: "main",
+		Targets: schema.DefaultWorkflowTargets(), TargetDefaults: []schema.TargetDefault{{Target: "target", Slot: schema.DefaultWorkflowTargetID}},
 		Graphs: []schema.Graph{{
 			ID: "main", Kind: schema.GraphKindMain,
 			Nodes: []schema.Node{{
@@ -455,7 +462,11 @@ func (a *Application) StartArtifactRun(ctx context.Context, request StartArtifac
 	}
 	a.commandMu.RLock()
 	defer a.commandMu.RUnlock()
-	return a.startRunArtifact(ctx, request.SourceArtifact, request.Principal, request.Selection, "", false, nil)
+	currentSource, _, err := workflowstore.MigrateSourceArtifact(request.SourceArtifact)
+	if err != nil {
+		return StartRunResult{}, err
+	}
+	return a.startRunArtifact(ctx, currentSource, request.Principal, request.Selection, "", false, nil)
 }
 
 func (a *Application) StartDebugRun(ctx context.Context, request StartRunRequest, breakpoints []compiler.DebugBreakpoint) (StartRunResult, error) {
@@ -495,6 +506,14 @@ func (a *Application) startRunArtifact(
 	if err := a.requireRunning(); err != nil {
 		return StartRunResult{}, err
 	}
+	parameterSource, parameterDiagnostics := schema.ParseSource(sourceArtifact)
+	if schema.HasErrors(parameterDiagnostics) {
+		return StartRunResult{Diagnostics: parameterDiagnostics}, nil
+	}
+	parameterValues, err := a.parameters.Load(parameterSource.Workflow.ID)
+	if err != nil {
+		return StartRunResult{}, err
+	}
 	var packageIDs []string
 	if a.validatePlugins != nil {
 		var err error
@@ -513,16 +532,11 @@ func (a *Application) startRunArtifact(
 			leased.release()
 		}
 	}()
-	preparedImages, err := a.prepareRunImages(ctx, sourceArtifact, leased.targets)
-	if err != nil {
-		return StartRunResult{}, err
-	}
-	originalRelease := leased.release
-	leased.release = func() {
-		preparedImages.Release()
-		originalRelease()
-	}
-	compiled, err := a.compileDraftWithOverrides(ctx, sourceArtifact, preparedImages.Overrides)
+	// Compile once to use the scheduler's actual active-node projection. Draft
+	// nodes must not require a local target merely because they exist in Source.
+	compiled, err := a.compiler.CompileDraft(ctx, compiler.CompileRequest{
+		SourceJSON: sourceArtifact, Catalog: a.catalog, BlobVerifier: a.blobVerifier, ParameterValues: parameterValues,
+	})
 	result := StartRunResult{SourceHash: compiled.SourceHash, Diagnostics: append([]schema.Diagnostic(nil), compiled.Diagnostics...)}
 	if err != nil || schema.HasErrors(compiled.Diagnostics) {
 		return result, err
@@ -530,6 +544,31 @@ func (a *Application) startRunArtifact(
 	program, ok := compiled.Program()
 	if !ok {
 		return result, errors.New("compiler returned no Program without diagnostics")
+	}
+	boundTargets, targetDiagnostics, err := a.bindWorkflowTargets(parameterSource, parameterValues, leased.targets, program)
+	result.Diagnostics = append(result.Diagnostics, targetDiagnostics...)
+	if err != nil || schema.HasErrors(targetDiagnostics) {
+		return result, err
+	}
+	leased.targets = boundTargets
+	preparedImages, err := a.prepareRunImages(ctx, sourceArtifact, leased.targets, program)
+	if err != nil {
+		return result, err
+	}
+	originalRelease := leased.release
+	leased.release = func() { preparedImages.Release(); originalRelease() }
+	if len(preparedImages.Overrides) > 0 {
+		compiled, err = a.compiler.CompileDraft(ctx, compiler.CompileRequest{
+			SourceJSON: sourceArtifact, Catalog: a.catalog, BlobVerifier: a.blobVerifier, ResourceOverrides: preparedImages.Overrides, ParameterValues: parameterValues,
+		})
+		result.Diagnostics = append([]schema.Diagnostic(nil), compiled.Diagnostics...)
+		if err != nil || schema.HasErrors(compiled.Diagnostics) {
+			return result, err
+		}
+		program, ok = compiled.Program()
+		if !ok {
+			return result, errors.New("compiler returned no Program without diagnostics")
+		}
 	}
 	result.ProgramHash = program.Hash()
 

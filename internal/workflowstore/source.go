@@ -5,6 +5,7 @@ package workflowstore
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -30,9 +31,13 @@ type InvalidSourceError struct{ Diagnostics []schema.Diagnostic }
 
 func (e *InvalidSourceError) Error() string { return "workflow source is invalid" }
 
+// Parameters must be the durable local override store when opening legacy
+// sources with machine targets. Bundle migration never uses this option.
 type SourceStoreOptions struct {
-	MaxSources int
-	Now        func() time.Time
+	MigrationHistoryRoot string
+	Parameters           *ParameterStore
+	MaxSources           int
+	Now                  func() time.Time
 }
 
 type SourceRecovery struct {
@@ -99,6 +104,7 @@ func openSourceStore(
 		original  catalog.WorkflowSourceRecord
 		candidate sourceCandidate
 		migrated  bool
+		bindings  map[string]string
 	}
 	prepared := make([]preparedSource, 0, len(records))
 	for _, record := range records {
@@ -119,7 +125,17 @@ func openSourceStore(
 			candidate.format != record.Format || candidate.version != record.Version) {
 			return nil, fmt.Errorf("%w: Catalog record %q is inconsistent", ErrSourceChanged, record.WorkflowID)
 		}
-		prepared = append(prepared, preparedSource{original: record, candidate: candidate, migrated: migrated})
+		var bindings map[string]string
+		if migrated {
+			bindings, err = legacyTargetBindings(record.Artifact)
+			if err != nil {
+				return nil, fmt.Errorf("read legacy target bindings %q: %w", record.WorkflowID, err)
+			}
+			if len(bindings) > 0 && options.Parameters == nil {
+				return nil, errors.New("workflow target migration requires the local parameter store")
+			}
+		}
+		prepared = append(prepared, preparedSource{original: record, candidate: candidate, migrated: migrated, bindings: bindings})
 	}
 	// Every source has passed migration and current-schema validation before
 	// publication begins. Each Catalog replacement is an exact hash CAS; a
@@ -127,6 +143,26 @@ func openSourceStore(
 	for _, source := range prepared {
 		if !source.migrated {
 			continue
+		}
+		// Seed before publishing: interruption leaves the old source retryable.
+		// Existing values (including explicit empty bindings) always win on retry.
+		if len(source.bindings) > 0 {
+			values, err := options.Parameters.Load(source.original.WorkflowID)
+			if err != nil {
+				return nil, fmt.Errorf("load target migration bindings %q: %w", source.original.WorkflowID, err)
+			}
+			for id, slot := range source.bindings {
+				key := schema.TargetParameterPrefix + id
+				if _, exists := values[key]; !exists {
+					values[key], _ = json.Marshal(slot)
+				}
+			}
+			if err := options.Parameters.Save(source.original.WorkflowID, values); err != nil {
+				return nil, fmt.Errorf("save target migration bindings %q: %w", source.original.WorkflowID, err)
+			}
+		}
+		if err := recordSourceMigration(options.MigrationHistoryRoot, source.original.WorkflowID, source.original.Hash, source.candidate.snapshot.hash); err != nil {
+			return nil, fmt.Errorf("record Workflow Source migration: %w", err)
 		}
 		record := source.candidate.record(options.Now().UTC())
 		if err := repository.PublishMigration(ctx, source.original.Hash, record, source.candidate.references()); err != nil {

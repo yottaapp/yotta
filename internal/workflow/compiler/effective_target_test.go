@@ -40,3 +40,22 @@ func TestEffectiveNodeConfigResolvesWorkflowDefaultAndNodeOverride(t *testing.T)
 		t.Fatalf("missing config unexpectedly contains target slot: %+v", missing)
 	}
 }
+
+func TestApplicationInheritsUnifiedWorkflowTarget(t *testing.T) {
+	builtins, err := nodes.Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	entry, ok := builtins.Catalog.Lookup("https://schemas.yotta.dev/nodes/application/launch")
+	if !ok {
+		t.Fatal("launch node missing")
+	}
+	config, err := effectiveNodeConfig([]schema.TargetDefault{{Target: "target", Slot: "launcher"}}, schema.Node{Config: map[string]any{}}, entry.Contract.Machine())
+	if err != nil || config["slot"] != "launcher" {
+		t.Fatalf("application default: %+v %v", config, err)
+	}
+	config, err = effectiveNodeConfig([]schema.TargetDefault{{Target: "target", Slot: "launcher"}}, schema.Node{Config: map[string]any{"slot": "second-app"}}, entry.Contract.Machine())
+	if err != nil || config["slot"] != "second-app" {
+		t.Fatalf("application override: %+v %v", config, err)
+	}
+}

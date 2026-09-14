@@ -1,21 +1,23 @@
 <template>
-  <BaseModal
+  <component
+    :is="inline ? 'section' : BaseModal"
     :open="open"
     :title="t('workflow.list.edit_metadata_title')"
     size="lg"
     :dismissible="!busy"
     @update:open="emit('update:open', $event)"
   >
-    <div class="space-y-4">
+    <fieldset :disabled="busy" class="space-y-4">
       <UFormField :label="t('workflow.editor.workflow_name')">
-        <UInput v-model="draft.name" class="w-full" autofocus />
+        <UInput :disabled="busy" v-model="draft.name" class="w-full" autofocus />
       </UFormField>
       <UFormField :label="t('workflow.list.description_label')">
-        <UTextarea v-model="draft.description" class="w-full" :rows="3" />
+        <UTextarea :disabled="busy" v-model="draft.description" class="w-full" :rows="3" />
       </UFormField>
       <div class="grid grid-cols-2 gap-3">
         <UFormField :label="t('common.category')">
           <UInputMenu
+            :disabled="busy"
             v-model="draft.category"
             class="w-full"
             :items="categoryOptions"
@@ -25,13 +27,20 @@
           />
         </UFormField>
         <UFormField :label="t('common.tags')" :hint="t('workflow.editor.tags_hint')">
-          <UInput v-model="tagsText" class="w-full" />
+          <UInput :disabled="busy" v-model="tagsText" class="w-full" />
         </UFormField>
       </div>
       <WorkflowHotkeyField :workflow-id="workflowId" :name="draft.name || name" />
       <p v-if="error" class="text-xs text-error" role="alert">{{ error }}</p>
-    </div>
-    <template #footer>
+      <UButton
+        v-if="inline"
+        :label="t('common.save')"
+        :loading="busy"
+        :disabled="!draft.name.trim()"
+        @click="submit"
+      />
+    </fieldset>
+    <template v-if="!inline" #footer>
       <div class="flex justify-end gap-2">
         <UButton
           color="neutral"
@@ -48,7 +57,7 @@
         />
       </div>
     </template>
-  </BaseModal>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -60,11 +69,18 @@ import { addCreatedCategory, uniqueCategoryOptions } from '@/lib/categoryOptions
 import type { WorkflowMetadataDraft } from './EditorWorkflowMetadataController'
 
 const props = defineProps<
-  WorkflowMetadataDraft & { workflowId: string; open: boolean; busy?: boolean; error?: string }
+  WorkflowMetadataDraft & {
+    workflowId: string
+    open: boolean
+    inline?: boolean
+    busy?: boolean
+    error?: string
+  }
 >()
 const emit = defineEmits<{
   'update:open': [open: boolean]
   submit: [draft: WorkflowMetadataDraft]
+  draft: [draft: WorkflowMetadataDraft]
 }>()
 const { t } = useI18n()
 const draft = reactive<WorkflowMetadataDraft>({
@@ -98,8 +114,8 @@ function createCategory(value: string): void {
   draft.category = result.value
 }
 
-function submit(): void {
-  emit('submit', {
+function snapshot(): WorkflowMetadataDraft {
+  return {
     name: draft.name.trim(),
     description: draft.description.trim(),
     category: draft.category.trim(),
@@ -111,6 +127,16 @@ function submit(): void {
           .filter(Boolean),
       ),
     ],
-  })
+  }
+}
+watch(
+  [draft, tagsText],
+  () => {
+    if (props.inline) emit('draft', snapshot())
+  },
+  { deep: true },
+)
+function submit() {
+  emit('submit', snapshot())
 }
 </script>

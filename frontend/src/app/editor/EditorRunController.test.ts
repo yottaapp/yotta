@@ -151,3 +151,36 @@ describe('editor run controller', () => {
     expect(run.controller.timelineExporting.value).toBe(false)
   })
 })
+
+describe('local workflow configuration lifecycle', () => {
+  it.each(['save', 'start', 'start-debug'] as const)(
+    'persists local bindings before %s and blocks on failure',
+    async (kind) => {
+      const run = harness()
+      const events: string[] = []
+      run.dependencies.persistLocalConfiguration = async () => {
+        events.push('bindings')
+        return true
+      }
+      run.session.save = vi.fn(async () => {
+        events.push('save')
+      })
+      run.session.run = vi.fn(async () => {
+        events.push('start')
+        return { runId: 'run' } as RunView
+      })
+      run.session.startDebug = vi.fn(async () => {
+        events.push('start-debug')
+        return { runId: 'run' } as RunView
+      })
+      const command = kind === 'start-debug' ? { kind, breakpoints: [] } : { kind }
+      expect(await run.controller.execute(command)).toEqual({ ok: true })
+      expect(events).toEqual(['bindings', kind])
+      events.length = 0
+      run.dependencies.persistLocalConfiguration = async () => false
+      expect(await run.controller.execute(command)).toEqual({ ok: false })
+      expect(events).toEqual([])
+      run.controller.dispose()
+    },
+  )
+})

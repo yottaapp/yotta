@@ -1,4 +1,19 @@
 export default {
+  settingsServices: {
+    title: 'Online services',
+    description:
+      'Use official Yotta services or enter local test server addresses. Restart the app to apply changes. The account service stays the same.',
+    hubURL: 'Market address',
+    registryURL: 'Registry address',
+    default_hint:
+      'Leave empty to use the default. Supports HTTPS and HTTP on localhost, 127.0.0.1, or [::1].',
+    invalid:
+      'Enter a complete HTTPS or local HTTP address without credentials, query parameters, or a fragment.',
+    restore: 'Restore defaults',
+    save: 'Save service addresses',
+    saved:
+      'Saved. Restart the app to apply changes. Switching services may require signing in again.',
+  },
   settingsPlugins: {
     location_state: 'Run history',
     location_state_hint: 'Workflow runs, events and outputs are stored in runs.db.',
@@ -115,7 +130,7 @@ export default {
     theme: {
       plugins:
         'Install node extensions and manage their background services. Import a newer package to update.',
-      general: 'Language, startup, capture, and logs',
+      general: 'Language, startup, capture, logs, and service addresses',
       hotkeys: 'Manage global, recording, and editor shortcuts',
       input: 'Set the recording mode and mouse calibration profiles',
       launcher: 'Arrange launcher content and display',

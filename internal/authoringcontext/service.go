@@ -15,6 +15,7 @@ import (
 	appcore "github.com/yottaapp/yotta/internal/application"
 	"github.com/yottaapp/yotta/internal/automation/target"
 	"github.com/yottaapp/yotta/internal/workflow/schema"
+	"github.com/yottaapp/yotta/internal/workflowstore"
 	"golang.org/x/image/draw"
 )
 
@@ -33,8 +34,13 @@ type Targets interface {
 	ResolveTarget(context.Context, string) (target.Target, error)
 	CapturePNG(context.Context, string) ([]byte, error)
 }
+type WorkflowApplication interface {
+	GetSource(string) (workflowstore.SourceSnapshot, error)
+	GetParameters(string) (appcore.ParameterConfiguration, error)
+}
+
 type Service struct {
-	Application *appcore.Application
+	Application WorkflowApplication
 	Targets     Targets
 	ListTargets func() []TargetInfo
 	Screen      func(context.Context) (image.Image, image.Point, error)
@@ -53,26 +59,110 @@ type Context struct {
 	Targets    []TargetInfo    `json:"targets"`
 }
 
-func (s *Service) Inspect(workflowID string) (Context, error) {
+// observation freezes one workflow revision and its local bindings for a single
+// observation. Machine slots never enter the authoring-facing target list.
+type observation struct {
+	context  Context
+	source   schema.WorkflowSource
+	bindings map[string]string
+}
+
+func (s *Service) loadObservation(workflowID string) (observation, error) {
 	if s == nil {
-		return Context{}, problem("unavailable")
+		return observation{}, problem("unavailable")
 	}
-	result := Context{Editor: s.Editor(), Targets: []TargetInfo{}}
+	result := observation{context: Context{Editor: s.Editor(), Targets: []TargetInfo{}}, bindings: map[string]string{}}
+	var installed []TargetInfo
 	if s.ListTargets != nil {
-		result.Targets = s.ListTargets()
+		installed = s.ListTargets()
 	}
 	if workflowID == "" {
-		workflowID = result.Editor.WorkflowID
+		workflowID = result.context.Editor.WorkflowID
 	}
 	if workflowID == "" {
+		result.context.Targets = append(result.context.Targets, installed...)
 		return result, nil
+	}
+	if s.Application == nil {
+		return observation{}, problem("unavailable")
 	}
 	snapshot, err := s.Application.GetSource(workflowID)
 	if err != nil {
-		return Context{}, problem("workflow_not_found")
+		return observation{}, problem("workflow_not_found")
 	}
-	result.WorkflowID, result.Revision, result.Source = workflowID, snapshot.Revision(), snapshot.Artifact()
+	source, diagnostics := schema.ParseSource(snapshot.Artifact())
+	if schema.HasErrors(diagnostics) {
+		return observation{}, problem("workflow_not_found")
+	}
+	result.context.WorkflowID, result.context.Revision, result.context.Source = workflowID, snapshot.Revision(), snapshot.Artifact()
+	result.source = source
+	if len(source.Targets) == 0 {
+		result.context.Targets = append(result.context.Targets, installed...)
+		return result, nil
+	}
+	parameters, err := s.Application.GetParameters(workflowID)
+	if err != nil {
+		return observation{}, problem("unavailable")
+	}
+	if parameters.Revision != snapshot.Revision() {
+		return observation{}, problem("save_first")
+	}
+	for _, role := range source.Targets {
+		var slot string
+		if json.Unmarshal(parameters.Values[schema.TargetParameterPrefix+role.ID], &slot) == nil {
+			result.bindings[role.ID] = slot
+		}
+		info := TargetInfo{Slot: role.ID, Label: role.Name, Kind: role.Kind}
+		if slot != "" {
+			for _, machine := range installed {
+				if machine.Slot == slot {
+					info.Kind, info.Adapter = machine.Kind, machine.Adapter
+					break
+				}
+			}
+		}
+		result.context.Targets = append(result.context.Targets, info)
+	}
 	return result, nil
+}
+func (s *Service) Inspect(workflowID string) (Context, error) {
+	observation, err := s.loadObservation(workflowID)
+	return observation.context, err
+}
+
+func (s *Service) observationSlot(workflowID, slot string) (roleID, machineSlot, name string, err error) {
+	observation, err := s.loadObservation(workflowID)
+	if err != nil {
+		return "", "", "", err
+	}
+	isDefault := slot == ""
+	if isDefault {
+		if observation.context.Editor.WorkflowID == observation.context.WorkflowID && observation.context.Editor.Dirty {
+			return "", "", "", problem("save_first")
+		}
+		slot, _ = schema.TargetDefaultSlot(observation.source, "target")
+		if slot == "" {
+			return "", "", "", problem("default_target_missing")
+		}
+	}
+	if len(observation.source.Targets) == 0 {
+		return slot, slot, "", nil
+	}
+	for _, role := range observation.source.Targets {
+		if role.ID != slot {
+			continue
+		}
+		machine := observation.bindings[role.ID]
+		if machine == "" {
+			code := "target_unavailable"
+			if isDefault {
+				code = "default_target_missing"
+			}
+			return "", "", "", problem(code)
+		}
+		return role.ID, machine, role.Name, nil
+	}
+	return "", "", "", problem("target_unavailable")
 }
 
 type CaptureRequest struct {
@@ -105,16 +195,26 @@ type ResolvedTarget struct {
 }
 
 func (s *Service) Describe(ctx context.Context, slot string) (ResolvedTarget, error) {
+	return s.DescribeWorkflow(ctx, "", slot)
+}
+func (s *Service) DescribeWorkflow(ctx context.Context, workflowID, slot string) (ResolvedTarget, error) {
 	if s == nil || s.Targets == nil {
 		return ResolvedTarget{}, problem("unavailable")
 	}
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	resolved, err := s.Targets.ResolveTarget(ctx, slot)
+	role, machine, name, err := s.observationSlot(workflowID, slot)
+	if err != nil {
+		return ResolvedTarget{}, err
+	}
+	resolved, err := s.Targets.ResolveTarget(ctx, machine)
 	if err != nil {
 		return ResolvedTarget{}, problem("target_unavailable")
 	}
-	return ResolvedTarget{Slot: slot, Name: resolved.DisplayName, Kind: resolved.Kind, Width: resolved.Resolution.W, Height: resolved.Resolution.H}, nil
+	if name == "" {
+		name = resolved.DisplayName
+	}
+	return ResolvedTarget{Slot: role, Name: name, Kind: resolved.Kind, Width: resolved.Resolution.W, Height: resolved.Resolution.H}, nil
 }
 func (s *Service) Capture(ctx context.Context, request CaptureRequest) (Capture, error) {
 	if s == nil {
@@ -136,33 +236,17 @@ func (s *Service) Capture(ctx context.Context, request CaptureRequest) (Capture,
 		frame, origin, err = s.Screen(ctx)
 		space = "screen"
 	} else {
-		if request.Slot == "" {
-			current, inspectErr := s.Inspect(request.WorkflowID)
-			if inspectErr != nil {
-				return Capture{}, inspectErr
-			}
-			if current.Editor.WorkflowID == current.WorkflowID && current.Editor.Dirty {
-				return Capture{}, problem("save_first")
-			}
-			var source schema.WorkflowSource
-			if json.Unmarshal(current.Source, &source) != nil {
-				return Capture{}, problem("default_target_missing")
-			}
-			for _, entry := range source.TargetDefaults {
-				if entry.Target == "target" {
-					request.Slot = entry.Slot
-					break
-				}
-			}
-			if request.Slot == "" {
-				return Capture{}, problem("default_target_missing")
-			}
+		role, machine, _, resolveErr := s.observationSlot(request.WorkflowID, request.Slot)
+		if resolveErr != nil {
+			return Capture{}, resolveErr
 		}
+		request.Slot = role
+
 		if s.Targets == nil {
 			return Capture{}, problem("unavailable")
 		}
 		var raw []byte
-		raw, err = s.Targets.CapturePNG(ctx, request.Slot)
+		raw, err = s.Targets.CapturePNG(ctx, machine)
 		if err == nil {
 			config, _, decodeErr := image.DecodeConfig(bytes.NewReader(raw))
 			if decodeErr != nil || config.Width <= 0 || config.Height <= 0 || int64(config.Width)*int64(config.Height) > 64_000_000 {

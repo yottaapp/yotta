@@ -1,4 +1,9 @@
+import { declareInsertedTargets } from './insertedWorkflowTargets'
+import { i18n } from '@/i18n'
 import type {
+  Parameter,
+  ParameterBlock,
+  WorkflowTarget,
   Edge,
   Graph,
   GraphCall,
@@ -127,7 +132,16 @@ export type EditorCommand =
   | { kind: 'set-target-default'; target: string; slot: string }
   | { kind: 'clear-target-default'; target: string }
   | { kind: 'add-state-variable'; name: string; type: TypeExpression; defaultValue: unknown }
-  | { kind: 'update-state-variable'; name: string; type: TypeExpression; defaultValue: unknown }
+  | {
+      kind: 'update-state-variable'
+      name: string
+      type: TypeExpression
+      defaultValue: unknown
+      parameter?: Parameter
+      clearParameter?: boolean
+    }
+  | { kind: 'set-workflow-targets'; targets: WorkflowTarget[] }
+  | { kind: 'set-parameter-blocks'; blocks: ParameterBlock[] }
   | { kind: 'remove-state-variable'; name: string }
   | { kind: 'add-node'; nodeTypeId: string; position: { x: number; y: number }; nodeId?: string }
   | { kind: 'upgrade-node-contract'; nodeId: string }
@@ -990,7 +1004,17 @@ export class EditorSession {
           ]
         : []
     })
-    this.apply({ kind: 'insert-node-selection', nodes, calls, annotations, edges })
+    const targets = declareInsertedTargets(
+      nodes,
+      this.source?.targets ?? [],
+      (node) => this.projections.get(node.nodeRef.nodeTypeId),
+      () => `target-${crypto.randomUUID()}`,
+      (number) => i18n.global.t('workflow.settings_panel.target_name', { number }),
+    )
+    this.applyBatch([
+      ...(targets ? [{ kind: 'set-workflow-targets' as const, targets }] : []),
+      { kind: 'insert-node-selection', nodes, calls, annotations, edges },
+    ])
     return [
       ...nodes.map((node) => node.id),
       ...calls.map((call) => call.id),
@@ -1071,7 +1095,15 @@ export class EditorSession {
       from: { nodeId: nodes[index].id, portId: draftNodes[index].execOutput },
       to: { nodeId: node.id, portId: draftNodes[index + 1].execInput },
     }))
+    const targets = declareInsertedTargets(
+      nodes,
+      this.source?.targets ?? [],
+      (node) => this.projections.get(node.nodeRef.nodeTypeId),
+      () => `target-${crypto.randomUUID()}`,
+      (number) => i18n.global.t('workflow.settings_panel.target_name', { number }),
+    )
     this.applyBatch([
+      ...(targets ? [{ kind: 'set-workflow-targets' as const, targets }] : []),
       ...resources.map((resource): EditorCommand => ({ kind: 'add-resource', resource })),
       { kind: 'insert-node-selection', nodes, calls: [], annotations: [], edges },
     ])
@@ -1706,7 +1738,7 @@ function isWorkflowSource(value: unknown): value is YottaWorkflowSource {
   const source = value as Record<string, unknown>
   return (
     source.format === 'yotta.workflow' &&
-    source.version === '1' &&
+    source.version === '5' &&
     typeof source.revision === 'number' &&
     typeof source.entryGraph === 'string' &&
     Array.isArray(source.graphs) &&

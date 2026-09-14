@@ -19,7 +19,7 @@ func TestCompilerRejectsRunRootOutsideTheEntryGraph(t *testing.T) {
 	}
 	ref := started.Contract.NodeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-run-root-placement","name":"Run root placement"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-run-root-placement","name":"Run root placement"},
 		"revision":0,"entryGraph":"main","graphs":[
 			{"id":"main","kind":"main","nodes":[],"edges":[],"inputs":[],"outputs":[]},
 			{"id":"child","kind":"subgraph","nodes":[

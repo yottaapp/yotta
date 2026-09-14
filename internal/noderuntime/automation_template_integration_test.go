@@ -270,7 +270,7 @@ func clickTemplateSource(builtins nodes.Builtins, slot string, template blob.Blo
 	started, _ := builtins.Definition(nodes.RunStartedNodeID)
 	click, _ := builtins.Definition(nodes.ClickTemplateNodeID)
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-click-template","name":"Click Template"},"revision":0,"entryGraph":"main",
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-click-template","name":"Click Template"},"revision":0,"entryGraph":"main",
 		"graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"click","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{"slot":%q},
@@ -288,7 +288,7 @@ func clickTemplateReuseSource(builtins nodes.Builtins, slot string, template blo
 	clickBindings := fmt.Sprintf(`"template":{"kind":"blob","blob":{"mediaType":%q,"digest":%q,"size":%d}},"region":{"kind":"default"},"threshold":{"kind":"default"},"timeout":{"kind":"value","value":5000},"poll-interval":{"kind":"value","value":100},"settle-duration":{"kind":"value","value":0},"button":{"kind":"default"},"hold-duration":{"kind":"default"}`,
 		template.MediaType, template.Digest, template.Size)
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-click-template-reuse","name":"Click Template Reuse"},"revision":0,"entryGraph":"main",
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-click-template-reuse","name":"Click Template Reuse"},"revision":0,"entryGraph":"main",
 		"graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"capture","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{"slot":%q},"bindings":{}},

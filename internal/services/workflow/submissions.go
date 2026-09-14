@@ -52,8 +52,12 @@ func registryErrorOrNil(err error) error {
 
 // OpenMySubmissions opens the creator's submissions in the configured Hub.
 func (s *Service) OpenMySubmissions() error {
-	if s.community == nil || s.wallet == nil || s.wallet.browser == nil {
+	browser := s.walletPageBrowser
+	if browser == nil && s.wallet != nil {
+		browser = s.wallet.browser
+	}
+	if s.community == nil || browser == nil {
 		return unavailable("submissions")
 	}
-	return accountError(s.wallet.browser.OpenURL(s.community.SubmissionsURL()))
+	return accountError(browser.OpenURL(s.community.SubmissionsURL()))
 }

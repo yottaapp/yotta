@@ -217,15 +217,6 @@
               :placeholder="t('workflow.target_default.placeholder')"
               @update:model-value="emit('set-default-target', $event)"
             />
-            <UButton
-              v-if="workflowDefaultTargetSlot"
-              icon="i-tabler-x"
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              :label="t('workflow.target_default.clear')"
-              @click="emit('set-default-target', '')"
-            />
           </div>
         </template>
       </UPopover>

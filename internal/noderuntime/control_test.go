@@ -116,7 +116,7 @@ func TestRunStartedBranchDelayAndStateWriteFormOneExplicitSignalFlow(t *testing.
 	endID, endDigest := ref(nodes.EndBranchNodeID)
 	booleanRef := builtins.BooleanType.TypeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-control","name":"Control"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-control","name":"Control"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"started","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"branch","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{},"bindings":{"condition":{"kind":"value","value":true}}},
@@ -240,7 +240,7 @@ func TestRepeatAndForEachUseIsolatedActivationState(t *testing.T) {
 			endID, endDigest := ref(nodes.EndBranchNodeID)
 			typeRef := test.variableType(builtins)
 			source := []byte(fmt.Sprintf(`{
-				"format":"yotta.workflow","version":"1","workflow":{"id":"wf-region","name":"Region"},
+				"format":"yotta.workflow","version":"5","workflow":{"id":"wf-region","name":"Region"},
 				"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 					{"id":"started","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 					{"id":"region","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{},"bindings":{%q:{"kind":"value","value":%s}}},
@@ -297,7 +297,7 @@ func TestRetryConsumesOnlyExplicitlyRoutedFailuresInsideItsActivation(t *testing
 	delayID, delayDigest := ref(nodes.DelayNodeID)
 	endID, endDigest := ref(nodes.EndBranchNodeID)
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-retry","name":"Retry"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-retry","name":"Retry"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"started","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"retry","nodeRef":{"nodeTypeId":%q,"version":"1.1.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{},"bindings":{"attempts":{"kind":"value","value":3}}},
@@ -359,7 +359,7 @@ func TestNestedRegionSignalPropagatesToItsExactOwner(t *testing.T) {
 	endID, endDigest := ref(nodes.EndBranchNodeID)
 	integerRef := builtins.IntegerType.TypeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-nested-region","name":"Nested region"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-nested-region","name":"Nested region"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"started","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"outer","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{},"bindings":{"count":{"kind":"value","value":3}}},
@@ -414,7 +414,7 @@ func TestCompilerRejectsRetrySignalsOutsideTheirActivationOrOnTheWrongChannel(t 
 	compile := func(edge string) compiler.CompileResult {
 		t.Helper()
 		source := []byte(fmt.Sprintf(`{
-			"format":"yotta.workflow","version":"1","workflow":{"id":"wf-retry-scope","name":"Retry scope"},
+			"format":"yotta.workflow","version":"5","workflow":{"id":"wf-retry-scope","name":"Retry scope"},
 			"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 				{"id":"started","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 				{"id":"retry","nodeRef":{"nodeTypeId":%q,"version":"1.1.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{},"bindings":{"attempts":{"kind":"value","value":3}}},

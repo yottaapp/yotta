@@ -298,17 +298,19 @@ describe('workflow authoring foundations', () => {
     expect(editor).toContain('inspectorAutoOpen.value = open')
   })
 
-  it('keeps workflow settings and reload recoverable through the focused tools seam', () => {
+  it('moves workflow settings to the first sidebar entry while keeping reload in tools', () => {
     const editor = readSource('src/views/WorkflowEditorView.vue')
     const toolbar = readSource('src/app/editor/WorkflowEditorToolbar.vue')
     const toolbarModel = readSource('src/app/editor/editorToolbarModel.ts')
 
     expect(toolbar).toContain('data-testid="workflow-editor-tools"')
     expect(toolbar).toContain('justify-start gap-2 text-left')
-    expect(toolbarModel).toContain("action('settings')")
+    expect(toolbarModel).not.toContain("action('settings')")
     expect(toolbarModel).toContain("action('reload')")
-    expect(editor).toContain('<WorkflowMetadataDialog')
-    expect(editor).toContain('const WorkflowMetadataDialog = defineAsyncComponent(')
+    expect(editor).toContain('<WorkflowSettingsPanel')
+    expect(readSource('src/app/editor/WorkflowWorkspaceRail.vue')).toContain(
+      "workspaceItem('settings', 'workflow.editor.settings'",
+    )
     expect(editor).toContain("case 'settings':")
     expect(editor).toContain("case 'reload':")
   })

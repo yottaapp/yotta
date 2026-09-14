@@ -77,5 +77,8 @@ func targetDefaultSlot(defaults []schema.TargetDefault, target string) (string, 
 			return candidate.Slot, true
 		}
 	}
+	if target == "application" {
+		return targetDefaultSlot(defaults, "target")
+	}
 	return "", false
 }

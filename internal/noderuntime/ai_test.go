@@ -29,7 +29,7 @@ func TestExecutorRunsAIGenerateThroughInstallationSlotAndJournalsProviderFacts(t
 	}
 	generate := builtins.AIGenerateContract.NodeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-ai","name":"AI"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-ai","name":"AI"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"generate","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":1,"y":0},
@@ -169,7 +169,7 @@ func TestCompilerRejectsDuplicateAIExtractOutputFields(t *testing.T) {
 	}
 	extract := builtins.AIExtractContract.NodeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-ai-extract","name":"AI Extract"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-ai-extract","name":"AI Extract"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"extract","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":1,"y":0},
@@ -208,7 +208,7 @@ func TestCompilerRejectsLegacyAIInstructionsOverride(t *testing.T) {
 	}
 	generate := builtins.AIGenerateContract.NodeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-ai-legacy","name":"AI legacy"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-ai-legacy","name":"AI legacy"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"generate","nodeRef":{"nodeTypeId":%q,"version":%q,"semanticDigest":%q},"position":{"x":1,"y":0},

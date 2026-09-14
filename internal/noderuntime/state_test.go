@@ -23,7 +23,7 @@ func TestStateReadIsBoundFromProgramStateAndJournaledAsAnEffect(t *testing.T) {
 	definition, _ := builtins.Definition(nodes.StateReadNodeID)
 	nodeRef, typeRef := definition.Contract.NodeRef(), builtins.StringType.TypeRef()
 	source := []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-state-read","name":"State read"},
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-state-read","name":"State read"},
 		"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[{
 			"id":"read","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},
 			"config":{"variable":"message"},"bindings":{}
@@ -105,7 +105,7 @@ func TestStateWriteSupportsEveryProjectedInitialType(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			source := []byte(fmt.Sprintf(`{
-				"format":"yotta.workflow","version":"1","workflow":{"id":"wf-state-matrix","name":"State matrix"},
+				"format":"yotta.workflow","version":"5","workflow":{"id":"wf-state-matrix","name":"State matrix"},
 				"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 					{"id":"started","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 					{"id":"write","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},
@@ -157,7 +157,7 @@ func TestStateIncrementSupportsIntegerAndNumberSlots(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			source := []byte(fmt.Sprintf(`{
-				"format":"yotta.workflow","version":"1","workflow":{"id":"wf-state-increment","name":"State increment"},
+				"format":"yotta.workflow","version":"5","workflow":{"id":"wf-state-increment","name":"State increment"},
 				"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[
 					{"id":"started","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 					{"id":"increment","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},

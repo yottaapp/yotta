@@ -61,6 +61,7 @@ func (verify BlobVerifierFunc) Verify(ctx context.Context, ref blob.BlobRef) err
 }
 
 type CompileRequest struct {
+	ParameterValues   map[string]json.RawMessage
 	SourceJSON        []byte
 	Catalog           nodecatalog.Snapshot
 	BlobVerifier      BlobVerifier
@@ -124,7 +125,10 @@ func (c *Compiler) CompileDraft(ctx context.Context, request CompileRequest) (Co
 		WorkflowID: source.Workflow.ID, Revision: source.Revision, EntryGraph: source.EntryGraph,
 		State: []programStateSlot{}, Graphs: []programGraph{},
 	}
-	stateSlots, stateDiagnostics := compileStateVariables(source.Variables, request.Catalog)
+	variables, parameterDiagnostics := resolveParameterValues(source.Variables, request.ParameterValues)
+	result.Diagnostics = append(result.Diagnostics, parameterDiagnostics...)
+	stateSlots, stateDiagnostics := compileStateVariables(variables, request.Catalog)
+	annotateParameterDiagnostics(variables, stateDiagnostics)
 	body.State = stateSlots
 	result.Diagnostics = append(result.Diagnostics, stateDiagnostics...)
 	stateByName := make(map[string]programStateSlot, len(stateSlots))

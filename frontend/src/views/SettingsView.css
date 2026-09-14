@@ -1,3 +1,5 @@
+@layer theme, base, components, utilities;
+
 @layer components {
   /* Settings is a routed surface. Its tint system and descendant Nuxt UI
      adjustments belong here instead of the application-wide stylesheet. */

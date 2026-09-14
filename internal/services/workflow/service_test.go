@@ -767,6 +767,10 @@ func TestServiceQueriesAndDeletesSourcesWithCASAndReferenceBlocking(t *testing.T
 }
 
 func workflowRuntime(t *testing.T, now time.Time, maxSources ...int) *appbootstrap.Runtime {
+	return workflowRuntimeConfigured(t, now, nil, maxSources...)
+}
+
+func workflowRuntimeConfigured(t *testing.T, now time.Time, configure func(*appbootstrap.Config), maxSources ...int) *appbootstrap.Runtime {
 	t.Helper()
 	sourceLimit := 8
 	if len(maxSources) != 0 {
@@ -809,7 +813,7 @@ func workflowRuntime(t *testing.T, now time.Time, maxSources ...int) *appbootstr
 	if err != nil {
 		t.Fatal(err)
 	}
-	runtime, err := appbootstrap.Build(appbootstrap.Config{
+	config := appbootstrap.Config{
 		DataRoot: roots.Data, ProgramCacheRoot: filepath.Join(roots.Cache, "programs"),
 		WorkflowRepository: foundation.Workflows(),
 		RunRepository:      foundation.Runs(),
@@ -823,7 +827,11 @@ func workflowRuntime(t *testing.T, now time.Time, maxSources ...int) *appbootstr
 		ApplicationInstallations: applicationInstallations, AutomationInstallations: automationInstallations,
 		ScriptRuntime: scriptRuntime, LogEmitter: noderuntime.LogEmitterFunc(func(context.Context, noderuntime.LogEntry) error { return nil }),
 		OwnerCloseTimeout: time.Second, Now: func() time.Time { return now },
-	})
+	}
+	if configure != nil {
+		configure(&config)
+	}
+	runtime, err := appbootstrap.Build(config)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -230,7 +230,19 @@ func (s *Service) PayRegistryWallet(ctx context.Context, input registryclient.Wa
 	return out, walletError(e)
 }
 
+// WithWalletPage separates opening the website from wallet payment authorization.
+func WithWalletPage(browser nativeoidc.Browser, raw string) Option {
+	return func(s *Service) { s.walletPageBrowser = browser; s.walletPageURL = raw }
+}
+
 func (s *Service) OpenRegistryWallet(ctx context.Context) error {
+	if s.walletPageURL != "" && s.walletPageBrowser != nil {
+		u, err := url.Parse(s.walletPageURL)
+		if err != nil || u.Host == "" || u.User != nil || u.Scheme != "https" {
+			return unavailable("wallet")
+		}
+		return accountError(s.walletPageBrowser.OpenURL(u.String()))
+	}
 	if s.wallet == nil {
 		return unavailable("wallet")
 	}

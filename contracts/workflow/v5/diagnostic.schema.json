@@ -1,0 +1,190 @@
+{
+  "$defs": {
+    "DiagnosticFix": {
+      "additionalProperties": false,
+      "properties": {
+        "fieldPath": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "graphPath": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "kind": {
+          "enum": [
+            "set_field",
+            "remove_field"
+          ],
+          "type": "string"
+        },
+        "nodeId": {
+          "type": "string"
+        },
+        "value": true
+      },
+      "required": [
+        "kind",
+        "fieldPath"
+      ],
+      "type": "object"
+    },
+    "TypeExpression": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "ref",
+              "type": "string"
+            },
+            "ref": {
+              "$ref": "#/$defs/TypeRef"
+            }
+          },
+          "required": [
+            "kind",
+            "ref"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "element": {
+              "$ref": "#/$defs/TypeExpression"
+            },
+            "kind": {
+              "const": "list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "element"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "union",
+              "type": "string"
+            },
+            "members": {
+              "items": {
+                "$ref": "#/$defs/TypeExpression"
+              },
+              "maxItems": 64,
+              "minItems": 2,
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "members"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "constraints": {
+              "items": {
+                "maxLength": 1024,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 32,
+              "type": "array"
+            },
+            "kind": {
+              "const": "variable",
+              "type": "string"
+            },
+            "variable": {
+              "maxLength": 1024,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "variable"
+          ],
+          "type": "object"
+        }
+      ],
+      "title": "TypeExpression"
+    },
+    "TypeRef": {
+      "additionalProperties": false,
+      "properties": {
+        "semanticDigest": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "typeId": {
+          "format": "uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "typeId",
+        "semanticDigest"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://yottaapp.dev/contracts/workflow/v5/diagnostic.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "type": "string"
+    },
+    "fieldPath": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "fix": {
+      "$ref": "#/$defs/DiagnosticFix"
+    },
+    "graphPath": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "message": {
+      "type": "string"
+    },
+    "nodeId": {
+      "type": "string"
+    },
+    "params": {
+      "type": "object"
+    },
+    "severity": {
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "code",
+    "severity"
+  ],
+  "title": "Yotta Compiler Diagnostic",
+  "type": "object"
+}

@@ -36,6 +36,7 @@ export interface EditorRunSession {
 
 export interface EditorRunControllerDependencies {
   commitInputs?: () => Promise<boolean>
+  persistLocalConfiguration?: () => Promise<boolean>
   session: EditorRunSession
   translate: (key: string, params?: Record<string, unknown>) => string
   showError: (title: string, error: unknown) => void
@@ -59,6 +60,12 @@ export function createEditorRunController(dependencies: EditorRunControllerDepen
       ['check-workflow', 'save', 'start', 'start-debug'].includes(command.kind) &&
       dependencies.commitInputs &&
       !(await dependencies.commitInputs())
+    )
+      return { ok: false }
+    if (
+      ['save', 'start', 'start-debug'].includes(command.kind) &&
+      dependencies.persistLocalConfiguration &&
+      !(await dependencies.persistLocalConfiguration())
     )
       return { ok: false }
     switch (command.kind) {

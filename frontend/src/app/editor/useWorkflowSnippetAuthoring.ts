@@ -11,6 +11,7 @@ interface WorkflowSnippetAuthoringOptions {
   screenToFlowCoordinate: (position: { x: number; y: number }) => { x: number; y: number }
   selectInsertedNodes: (nodeIds: string[]) => Promise<void>
   showSnippetPanel: () => void
+  showTargetSetup?: () => void
   projectionTitle: (projection: NodeProjection) => string
   confirm: (options: ConfirmOpts) => Promise<boolean | string>
   translate: (key: string, params?: Record<string, unknown>) => string
@@ -125,6 +126,7 @@ export function useWorkflowSnippetAuthoring(options: WorkflowSnippetAuthoringOpt
               y: rect.top + rect.height / 2,
             })
           : { x: 160, y: 160 })
+      const targetCount = options.session.source?.targets?.length ?? 0
       const [nodeID] = options.session.insertNodeSelection(
         {
           nodes: [
@@ -144,6 +146,7 @@ export function useWorkflowSnippetAuthoring(options: WorkflowSnippetAuthoringOpt
       )
       if (!nodeID) return
       await options.selectInsertedNodes([nodeID])
+      if ((options.session.source?.targets?.length ?? 0) > targetCount) options.showTargetSetup?.()
       try {
         await options.snippets.markUsed(id)
       } catch (error) {

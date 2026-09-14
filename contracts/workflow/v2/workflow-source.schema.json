@@ -1,0 +1,1242 @@
+{
+  "$defs": {
+    "Annotation": {
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "maxLength": 32,
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "size": {
+          "$ref": "#/$defs/Size"
+        },
+        "text": {
+          "maxLength": 16384,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "position",
+        "size"
+      ],
+      "type": "object"
+    },
+    "BlobRef": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "mediaType": {
+          "maxLength": 255,
+          "minLength": 3,
+          "pattern": "^[a-z0-9][a-z0-9!#$\u0026^_.+-]+/[a-z0-9][a-z0-9!#$\u0026^_.+-]+$",
+          "type": "string"
+        },
+        "size": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "mediaType",
+        "digest",
+        "size"
+      ],
+      "type": "object"
+    },
+    "CredentialRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "purpose": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "type": "string"
+        },
+        "slot": {
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slot",
+        "kind",
+        "purpose"
+      ],
+      "type": "object"
+    },
+    "Edge": {
+      "additionalProperties": false,
+      "properties": {
+        "channel": {
+          "enum": [
+            "data",
+            "exec",
+            "error"
+          ],
+          "type": "string"
+        },
+        "from": {
+          "$ref": "#/$defs/Endpoint"
+        },
+        "presentation": {
+          "$ref": "#/$defs/EdgePresentation"
+        },
+        "to": {
+          "$ref": "#/$defs/Endpoint"
+        }
+      },
+      "required": [
+        "channel",
+        "from",
+        "to"
+      ],
+      "type": "object"
+    },
+    "EdgePresentation": {
+      "additionalProperties": false,
+      "properties": {
+        "reroutes": {
+          "items": {
+            "$ref": "#/$defs/Position"
+          },
+          "maxItems": 64,
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "Endpoint": {
+      "additionalProperties": false,
+      "properties": {
+        "nodeId": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "portId": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "nodeId",
+        "portId"
+      ],
+      "type": "object"
+    },
+    "Graph": {
+      "additionalProperties": false,
+      "properties": {
+        "annotations": {
+          "items": {
+            "$ref": "#/$defs/Annotation"
+          },
+          "maxItems": 4096,
+          "type": "array"
+        },
+        "calls": {
+          "items": {
+            "$ref": "#/$defs/GraphCall"
+          },
+          "maxItems": 4096,
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/Edge"
+          },
+          "maxItems": 16384,
+          "type": "array"
+        },
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/Endpoint"
+          },
+          "maxItems": 1,
+          "type": "array"
+        },
+        "exits": {
+          "items": {
+            "$ref": "#/$defs/GraphExit"
+          },
+          "maxItems": 64,
+          "type": "array"
+        },
+        "id": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "inputs": {
+          "items": {
+            "$ref": "#/$defs/GraphPort"
+          },
+          "maxItems": 4096,
+          "type": "array"
+        },
+        "kind": {
+          "enum": [
+            "main",
+            "subgraph"
+          ],
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 256,
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/Node"
+          },
+          "maxItems": 4096,
+          "type": "array"
+        },
+        "outputs": {
+          "items": {
+            "$ref": "#/$defs/GraphPort"
+          },
+          "maxItems": 4096,
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "nodes",
+        "edges",
+        "inputs",
+        "outputs"
+      ],
+      "type": "object"
+    },
+    "GraphCall": {
+      "additionalProperties": false,
+      "properties": {
+        "bindings": {
+          "additionalProperties": {
+            "$ref": "#/$defs/InputBinding"
+          },
+          "type": "object"
+        },
+        "graphId": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        }
+      },
+      "required": [
+        "id",
+        "graphId",
+        "position",
+        "bindings"
+      ],
+      "type": "object"
+    },
+    "GraphExit": {
+      "additionalProperties": false,
+      "properties": {
+        "channel": {
+          "enum": [
+            "exec",
+            "error"
+          ],
+          "type": "string"
+        },
+        "endpoint": {
+          "$ref": "#/$defs/Endpoint"
+        },
+        "id": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 256,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "channel",
+        "endpoint"
+      ],
+      "type": "object"
+    },
+    "GraphPort": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 256,
+          "type": "string"
+        },
+        "nodeId": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "portId": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/TypeExpression"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "nodeId",
+        "portId"
+      ],
+      "type": "object"
+    },
+    "ImageResource": {
+      "additionalProperties": false,
+      "properties": {
+        "variants": {
+          "items": {
+            "$ref": "#/$defs/ImageResourceVariant"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "variants"
+      ],
+      "type": "object"
+    },
+    "ImageResourceVariant": {
+      "additionalProperties": false,
+      "properties": {
+        "bbox": {
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array"
+        },
+        "blob": {
+          "$ref": "#/$defs/BlobRef"
+        },
+        "id": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "regions": {
+          "items": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array"
+          },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "resolution": {
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "resolution",
+        "bbox",
+        "blob"
+      ],
+      "type": "object"
+    },
+    "InputBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "blob": {
+          "$ref": "#/$defs/BlobRef"
+        },
+        "kind": {
+          "enum": [
+            "value",
+            "default",
+            "blob",
+            "resource"
+          ],
+          "type": "string"
+        },
+        "resource": {
+          "$ref": "#/$defs/ResourceBinding"
+        },
+        "value": true
+      },
+      "required": [
+        "kind"
+      ],
+      "type": "object"
+    },
+    "InputClipResource": {
+      "additionalProperties": false,
+      "properties": {
+        "baseResolution": {
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "blob": {
+          "$ref": "#/$defs/BlobRef"
+        },
+        "durationUs": {
+          "maximum": 3600000000,
+          "type": "integer"
+        },
+        "eventCount": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "mouseCounts360": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "mouseMode": {
+          "enum": [
+            "relative",
+            "absolute",
+            "mixed"
+          ],
+          "type": "string"
+        },
+        "recordingMode": {
+          "enum": [
+            "simple",
+            "precise"
+          ],
+          "type": "string"
+        },
+        "stopHotkeyVk": {
+          "maximum": 255,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "blob",
+        "durationUs",
+        "eventCount",
+        "recordingMode",
+        "mouseMode",
+        "baseResolution",
+        "mouseCounts360",
+        "stopHotkeyVk"
+      ],
+      "type": "object"
+    },
+    "MacroResource": {
+      "additionalProperties": false,
+      "properties": {
+        "actionCount": {
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "baseResolution": {
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "blob": {
+          "$ref": "#/$defs/BlobRef"
+        },
+        "durationUs": {
+          "maximum": 3600000000,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "blob",
+        "baseResolution",
+        "actionCount",
+        "durationUs"
+      ],
+      "type": "object"
+    },
+    "Node": {
+      "additionalProperties": false,
+      "properties": {
+        "bindings": {
+          "additionalProperties": {
+            "$ref": "#/$defs/InputBinding"
+          },
+          "type": "object"
+        },
+        "config": {
+          "type": "object"
+        },
+        "disabled": {
+          "type": "boolean"
+        },
+        "id": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "nodeRef": {
+          "$ref": "#/$defs/NodeRef"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        }
+      },
+      "required": [
+        "id",
+        "nodeRef",
+        "position",
+        "config",
+        "bindings"
+      ],
+      "type": "object"
+    },
+    "NodePackageDependency": {
+      "additionalProperties": false,
+      "properties": {
+        "manifestDigest": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "nodeRefs": {
+          "items": {
+            "$ref": "#/$defs/NodeRef"
+          },
+          "maxItems": 4096,
+          "minItems": 1,
+          "type": "array"
+        },
+        "packageId": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "packageVersion": {
+          "maxLength": 128,
+          "type": "string"
+        },
+        "publisherNamespace": {
+          "maxLength": 1024,
+          "type": "string"
+        }
+      },
+      "required": [
+        "publisherNamespace",
+        "packageId",
+        "packageVersion",
+        "manifestDigest",
+        "nodeRefs"
+      ],
+      "type": "object"
+    },
+    "NodeRef": {
+      "additionalProperties": false,
+      "properties": {
+        "nodeTypeId": {
+          "format": "uri",
+          "type": "string"
+        },
+        "semanticDigest": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "version": {
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "nodeTypeId",
+        "version",
+        "semanticDigest"
+      ],
+      "type": "object"
+    },
+    "Parameter": {
+      "additionalProperties": false,
+      "properties": {
+        "control": {
+          "enum": [
+            "auto",
+            "select",
+            "multiselect"
+          ],
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 4096,
+          "type": "string"
+        },
+        "group": {
+          "maxLength": 256,
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 256,
+          "minLength": 1,
+          "type": "string"
+        },
+        "maximum": {
+          "type": "number"
+        },
+        "minimum": {
+          "type": "number"
+        },
+        "options": {
+          "items": {
+            "$ref": "#/$defs/ParameterOption"
+          },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "order": {
+          "type": "integer"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "visibleWhen": {
+          "$ref": "#/$defs/ParameterCondition"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "control"
+      ],
+      "type": "object"
+    },
+    "ParameterCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "equals": true,
+        "parameterId": {
+          "maxLength": 128,
+          "type": "string"
+        }
+      },
+      "required": [
+        "parameterId",
+        "equals"
+      ],
+      "type": "object"
+    },
+    "ParameterOption": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "maxLength": 256,
+          "minLength": 1,
+          "type": "string"
+        },
+        "value": true
+      },
+      "required": [
+        "label",
+        "value"
+      ],
+      "type": "object"
+    },
+    "Position": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "type": "object"
+    },
+    "Resource": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "schema": true
+      },
+      "required": [
+        "id",
+        "schema"
+      ],
+      "type": "object"
+    },
+    "ResourceBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "resourceId": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "variantId": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "resourceId"
+      ],
+      "type": "object"
+    },
+    "Size": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ],
+      "type": "object"
+    },
+    "TargetDefault": {
+      "additionalProperties": false,
+      "properties": {
+        "slot": {
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$",
+          "type": "string"
+        },
+        "target": {
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target",
+        "slot"
+      ],
+      "type": "object"
+    },
+    "TargetDiscoveryHint": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "application-name",
+            "executable-name",
+            "window-title",
+            "android-package",
+            "device-model",
+            "browser-host"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "maxLength": 512,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "value"
+      ],
+      "type": "object"
+    },
+    "TargetProfileDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "adapterKind": {
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 4096,
+          "type": "string"
+        },
+        "discoveryHints": {
+          "items": {
+            "$ref": "#/$defs/TargetDiscoveryHint"
+          },
+          "maxItems": 64,
+          "type": "array"
+        },
+        "id": {
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$",
+          "type": "string"
+        },
+        "initialDefaults": true,
+        "name": {
+          "maxLength": 256,
+          "minLength": 1,
+          "type": "string"
+        },
+        "profileVersion": {
+          "maxLength": 32,
+          "pattern": "^[1-9][0-9]*$",
+          "type": "string"
+        },
+        "settingsSchemaBundle": {
+          "items": {
+            "$ref": "#/$defs/Resource"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "settingsSchemaRoot": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "targetKind": {
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "targetKind",
+        "adapterKind",
+        "profileVersion",
+        "settingsSchemaRoot",
+        "settingsSchemaBundle",
+        "initialDefaults",
+        "discoveryHints"
+      ],
+      "type": "object"
+    },
+    "TypeExpression": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "ref",
+              "type": "string"
+            },
+            "ref": {
+              "$ref": "#/$defs/TypeRef"
+            }
+          },
+          "required": [
+            "kind",
+            "ref"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "element": {
+              "$ref": "#/$defs/TypeExpression"
+            },
+            "kind": {
+              "const": "list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "element"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "union",
+              "type": "string"
+            },
+            "members": {
+              "items": {
+                "$ref": "#/$defs/TypeExpression"
+              },
+              "maxItems": 64,
+              "minItems": 2,
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "members"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "constraints": {
+              "items": {
+                "maxLength": 1024,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 32,
+              "type": "array"
+            },
+            "kind": {
+              "const": "variable",
+              "type": "string"
+            },
+            "variable": {
+              "maxLength": 1024,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "variable"
+          ],
+          "type": "object"
+        }
+      ],
+      "title": "TypeExpression"
+    },
+    "TypeRef": {
+      "additionalProperties": false,
+      "properties": {
+        "semanticDigest": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "typeId": {
+          "format": "uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "typeId",
+        "semanticDigest"
+      ],
+      "type": "object"
+    },
+    "Variable": {
+      "additionalProperties": false,
+      "properties": {
+        "default": true,
+        "name": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "parameter": {
+          "$ref": "#/$defs/Parameter"
+        },
+        "type": {
+          "$ref": "#/$defs/TypeExpression"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "default"
+      ],
+      "type": "object"
+    },
+    "Workflow": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "maxLength": 128,
+          "type": "string"
+        },
+        "createdAt": {
+          "maxLength": 64,
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 4096,
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 256,
+          "minLength": 1,
+          "type": "string"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "type": "array"
+        },
+        "updatedAt": {
+          "maxLength": 64,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "WorkflowReleaseOrigin": {
+      "additionalProperties": false,
+      "properties": {
+        "attestationDigest": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "publisherNamespace": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "releaseDigest": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "releaseVersion": {
+          "maxLength": 128,
+          "type": "string"
+        },
+        "sourceHash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "workflowId": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "releaseDigest",
+        "sourceHash",
+        "attestationDigest",
+        "publisherNamespace",
+        "workflowId",
+        "releaseVersion"
+      ],
+      "type": "object"
+    },
+    "WorkflowResource": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "maxLength": 128,
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 4096,
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+          "type": "string"
+        },
+        "image": {
+          "$ref": "#/$defs/ImageResource"
+        },
+        "inputClip": {
+          "$ref": "#/$defs/InputClipResource"
+        },
+        "kind": {
+          "enum": [
+            "image",
+            "macro",
+            "input-clip"
+          ],
+          "type": "string"
+        },
+        "macro": {
+          "$ref": "#/$defs/MacroResource"
+        },
+        "name": {
+          "maxLength": 256,
+          "minLength": 1,
+          "type": "string"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "name"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://yottaapp.dev/contracts/workflow/v2/workflow-source.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "credentialRequirements": {
+      "items": {
+        "$ref": "#/$defs/CredentialRequirement"
+      },
+      "maxItems": 4096,
+      "type": "array"
+    },
+    "dependencies": {
+      "items": {
+        "$ref": "#/$defs/NodePackageDependency"
+      },
+      "maxItems": 4096,
+      "type": "array"
+    },
+    "derivedFrom": {
+      "$ref": "#/$defs/WorkflowReleaseOrigin"
+    },
+    "entryGraph": {
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]*$",
+      "type": "string"
+    },
+    "format": {
+      "enum": [
+        "yotta.workflow"
+      ],
+      "type": "string"
+    },
+    "graphs": {
+      "items": {
+        "$ref": "#/$defs/Graph"
+      },
+      "maxItems": 256,
+      "minItems": 1,
+      "type": "array"
+    },
+    "resources": {
+      "items": {
+        "$ref": "#/$defs/WorkflowResource"
+      },
+      "maxItems": 4096,
+      "type": "array"
+    },
+    "revision": {
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "targetDefaults": {
+      "items": {
+        "$ref": "#/$defs/TargetDefault"
+      },
+      "maxItems": 64,
+      "type": "array"
+    },
+    "targetProfileDefinitions": {
+      "items": {
+        "$ref": "#/$defs/TargetProfileDefinition"
+      },
+      "maxItems": 64,
+      "type": "array"
+    },
+    "variables": {
+      "items": {
+        "$ref": "#/$defs/Variable"
+      },
+      "maxItems": 4096,
+      "type": "array"
+    },
+    "version": {
+      "enum": [
+        "2"
+      ],
+      "type": "string"
+    },
+    "workflow": {
+      "$ref": "#/$defs/Workflow"
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "workflow",
+    "revision",
+    "entryGraph",
+    "graphs",
+    "resources",
+    "targetProfileDefinitions",
+    "credentialRequirements",
+    "dependencies",
+    "variables"
+  ],
+  "title": "Yotta Workflow Source",
+  "type": "object"
+}

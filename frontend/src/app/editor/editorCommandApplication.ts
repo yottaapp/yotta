@@ -57,6 +57,21 @@ export function applyCommand(
         throw new Error('target default name is invalid')
       if (!/^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$/.test(slot))
         throw new Error('target default slot is invalid')
+      if (source.targets?.length && ['target', 'application'].includes(target)) {
+        if (!source.targets.some((role) => role.id === slot))
+          throw new Error('unknown workflow target')
+        applyCommand(
+          source,
+          graph,
+          {
+            kind: 'set-workflow-targets',
+            targets: source.targets.map((role) => ({ ...role, default: role.id === slot })),
+          },
+          projections,
+          types,
+        )
+        return
+      }
       const defaults = (source.targetDefaults ??= [])
       const existing = defaults.find((candidate) => candidate.target === target)
       if (existing) existing.slot = slot
@@ -65,6 +80,8 @@ export function applyCommand(
       return
     }
     case 'clear-target-default':
+      if (source.targets?.length && ['target', 'application'].includes(command.target))
+        throw new Error('workflow default target cannot be cleared')
       source.targetDefaults = source.targetDefaults?.filter(
         (candidate) => candidate.target !== command.target,
       )
@@ -84,11 +101,43 @@ export function applyCommand(
       })
       return
     }
+    case 'set-workflow-targets': {
+      const targets = clone(command.targets)
+      if (
+        !targets.length ||
+        targets.filter((target) => target.default).length !== 1 ||
+        new Set(targets.map((target) => target.id)).size !== targets.length
+      )
+        throw new Error('workflow targets require unique IDs and one default')
+      const removed = (source.targets ?? []).filter(
+        (target) => !targets.some((next) => next.id === target.id),
+      )
+      if (
+        removed.some((target) =>
+          source.graphs.some((graph) => graph.nodes.some((node) => node.config.slot === target.id)),
+        )
+      )
+        throw new Error('workflow target is still referenced')
+      source.targets = targets
+      source.targetDefaults =
+        source.targetDefaults?.filter((target) => target.target !== 'application') ?? []
+      const defaults = source.targetDefaults
+      const current = defaults.find((target) => target.target === 'target')
+      const slot = targets.find((target) => target.default)!.id
+      if (current) current.slot = slot
+      else defaults.push({ target: 'target', slot })
+      return
+    }
+    case 'set-parameter-blocks':
+      source.parameterBlocks = clone(command.blocks)
+      return
     case 'update-state-variable': {
       const variable = source.variables.find((candidate) => candidate.name === command.name)
       if (!variable) throw new Error(`state variable ${command.name} does not exist`)
       variable.type = clone(command.type)
       variable.default = clone(command.defaultValue)
+      if (command.clearParameter) delete variable.parameter
+      else if (command.parameter) variable.parameter = clone(command.parameter)
       return
     }
     case 'remove-state-variable': {
@@ -182,7 +231,12 @@ export function applyCommand(
       ].some(
         (target) =>
           target.key === command.fieldId &&
-          source.targetDefaults?.some((value) => value.target === target.target && value.slot),
+          source.targetDefaults?.some(
+            (value) =>
+              (value.target === target.target ||
+                (target.target === 'application' && value.target === 'target')) &&
+              value.slot,
+          ),
       )
       if (field?.hasDefault && !inherited) node.config[command.fieldId] = clone(field.default)
       else delete node.config[command.fieldId]

@@ -213,7 +213,7 @@ function fixture(): YottaWorkflowSource {
   }
   return {
     format: 'yotta.workflow',
-    version: '1',
+    version: '5',
     workflow: { id: 'wf', name: 'Workflow' },
     revision: 0,
     entryGraph: 'main',

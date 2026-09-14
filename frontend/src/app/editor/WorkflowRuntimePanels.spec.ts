@@ -72,7 +72,7 @@ describe('workflow runtime inspection UI', () => {
 
   it('represents an unset target through the placeholder instead of an invalid empty select item', () => {
     expect(canvas).toContain('workflow.target_default.placeholder')
-    expect(canvas).toContain('workflow.target_default.clear')
+    expect(canvas).not.toContain('workflow.target_default.clear')
     expect(editor).not.toContain("label: t('workflow.target_default.none'), value: ''")
   })
 

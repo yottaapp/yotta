@@ -198,7 +198,7 @@ func dualColorBarSource(builtins nodes.Builtins, slot string) []byte {
 	started, _ := builtins.Definition(nodes.RunStartedNodeID)
 	control, _ := builtins.Definition(nodes.ControlDualColorBarNodeID)
 	return []byte(fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1","workflow":{"id":"wf-dual-color-bar-control","name":"Dual Color Bar Control"},"revision":0,"entryGraph":"main",
+		"format":"yotta.workflow","version":"5","workflow":{"id":"wf-dual-color-bar-control","name":"Dual Color Bar Control"},"revision":0,"entryGraph":"main",
 		"graphs":[{"id":"main","kind":"main","nodes":[
 			{"id":"start","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":0,"y":0},"config":{},"bindings":{}},
 			{"id":"control","nodeRef":{"nodeTypeId":%q,"version":"1.0.0","semanticDigest":%q},"position":{"x":1,"y":0},"config":{"slot":%q},"bindings":{

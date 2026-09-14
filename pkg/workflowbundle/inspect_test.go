@@ -15,7 +15,7 @@ import (
 )
 
 func TestInspectExposesPortableBundleFacts(t *testing.T) {
-	rawSource := []byte(`{"format":"yotta.workflow","version":"1","workflow":{"id":"published_workflow","name":"整理照片"},"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[],"edges":[],"inputs":[],"outputs":[]}],"variables":[],"resources":[],"targetProfileDefinitions":[],"credentialRequirements":[],"dependencies":[]}`)
+	rawSource := []byte(`{"format":"yotta.workflow","version":"5","workflow":{"id":"published_workflow","name":"整理照片"},"revision":0,"entryGraph":"main","graphs":[{"id":"main","kind":"main","nodes":[],"edges":[],"inputs":[],"outputs":[]}],"variables":[],"resources":[],"targetProfileDefinitions":[],"credentialRequirements":[],"dependencies":[]}`)
 	_, canonical, sourceHash, diagnostics, err := schema.CanonicalSource(rawSource)
 	if err != nil || len(diagnostics) != 0 {
 		t.Fatalf("CanonicalSource() diagnostics = %#v, error = %v", diagnostics, err)

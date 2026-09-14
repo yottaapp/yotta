@@ -38,9 +38,9 @@ func (s *registrar) registerObservation(protocol *server.MCPServer) {
 			raw, _ := json.Marshal(result.Info)
 			return &mcp.CallToolResult{Content: []mcp.Content{mcp.TextContent{Type: "text", Text: string(raw)}, mcp.ImageContent{Type: "image", Data: base64.StdEncoding.EncodeToString(result.Data), MIMEType: result.MediaType}}, StructuredContent: result.Info}, nil
 		})
-	protocol.AddTool(mcp.NewTool("automation_target", mcp.WithDescription("Resolve a configured automation target to its current display name and pixel dimensions without changing focus."), mcp.WithString("slot", mcp.Required())),
+	protocol.AddTool(mcp.NewTool("automation_target", mcp.WithDescription("Resolve a configured automation target to its current display name and pixel dimensions without changing focus."), mcp.WithString("slot", mcp.Required()), mcp.WithString("workflowId")),
 		func(ctx context.Context, call mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			result, err := s.observation.Describe(ctx, call.GetString("slot", ""))
+			result, err := s.observation.DescribeWorkflow(ctx, call.GetString("workflowId", ""), call.GetString("slot", ""))
 			if err != nil {
 				return toolProblemResult(apperr.From(err)), nil
 			}

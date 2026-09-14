@@ -15,6 +15,7 @@ interface WorkflowResourceAuthoringOptions {
   selectedNodeId: Ref<string>
   selectedNodeIds: Ref<Set<string>>
   defaultTargetSlot: Readonly<Ref<string>>
+  resolveTargetSlot?: (id: string) => string
   recordingTargetSlot: () => string
   recordingTargetItems: Readonly<Ref<Array<{ value: string }>>>
   screenToFlowCoordinate: (position: { x: number; y: number }) => { x: number; y: number }
@@ -59,11 +60,16 @@ export function useWorkflowResourceAuthoring(options: WorkflowResourceAuthoringO
       )
       return
     }
-    const selectedSlot = options.selectedNode.value?.config.slot
+    const rawSlot = String(options.selectedNode.value?.config.slot ?? '')
+    const selectedSlot = options.resolveTargetSlot?.(rawSlot) ?? rawSlot
     captureTargetSlot.value =
       typeof selectedSlot === 'string' && targets.some((item) => item.value === selectedSlot)
         ? selectedSlot
-        : options.defaultTargetSlot.value || captureTargetSlot.value || targets[0]?.value || ''
+        : (options.resolveTargetSlot?.(options.defaultTargetSlot.value) ??
+            options.defaultTargetSlot.value) ||
+          captureTargetSlot.value ||
+          targets[0]?.value ||
+          ''
     captureIntent.value = resource && mode ? { resource: copy(resource), mode, variantId } : null
     captureOpen.value = true
   }
@@ -341,6 +347,7 @@ export function useWorkflowResourceAuthoring(options: WorkflowResourceAuthoringO
   }
 
   function targetSlot(): string {
+    if (options.session.source?.targets?.length) return options.defaultTargetSlot.value
     return (
       options.defaultTargetSlot.value ||
       options.recordingTargetSlot() ||

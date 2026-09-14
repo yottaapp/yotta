@@ -3,8 +3,8 @@
   "generator": "wails3",
   "summary": {
     "services": 19,
-    "methods": 228,
-    "models": 321
+    "methods": 231,
+    "models": 331
   },
   "services": [
     {
@@ -2311,6 +2311,18 @@
           "returns": "$CancellablePromise<schema$0.NodePackageDependency[]>"
         },
         {
+          "name": "GetParameters",
+          "bindingId": "1863618096",
+          "parameters": [
+            {
+              "name": "workflowID",
+              "optional": false,
+              "type": "string"
+            }
+          ],
+          "returns": "$CancellablePromise<application$0.ParameterConfiguration>"
+        },
+        {
           "name": "GetRunTimeline",
           "bindingId": "3918199178",
           "parameters": [
@@ -2713,6 +2725,50 @@
             }
           ],
           "returns": "$CancellablePromise<communityclient$0.Reply>"
+        },
+        {
+          "name": "SaveParameters",
+          "bindingId": "4042178113",
+          "parameters": [
+            {
+              "name": "workflowID",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "revision",
+              "optional": false,
+              "type": "number"
+            },
+            {
+              "name": "values",
+              "optional": false,
+              "type": "{ [_ in string]?: json$0.RawMessage }"
+            }
+          ],
+          "returns": "$CancellablePromise<schema$0.Diagnostic[]>"
+        },
+        {
+          "name": "SaveTargetBindings",
+          "bindingId": "1653161878",
+          "parameters": [
+            {
+              "name": "workflowID",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "revision",
+              "optional": false,
+              "type": "number"
+            },
+            {
+              "name": "bindings",
+              "optional": false,
+              "type": "{ [_ in string]?: string }"
+            }
+          ],
+          "returns": "$CancellablePromise<schema$0.Diagnostic[]>"
         },
         {
           "name": "SaveWorkflowReview",
@@ -3586,6 +3642,37 @@
     {
       "module": "internal/application/models",
       "declarations": [
+        {
+          "kind": "class",
+          "name": "ParameterConfiguration",
+          "fields": [
+            {
+              "name": "\"targets\"",
+              "optional": false,
+              "type": "schema$0.WorkflowTarget[]"
+            },
+            {
+              "name": "\"blocks\"",
+              "optional": false,
+              "type": "schema$0.ParameterBlock[]"
+            },
+            {
+              "name": "\"variables\"",
+              "optional": false,
+              "type": "schema$0.Variable[]"
+            },
+            {
+              "name": "\"values\"",
+              "optional": false,
+              "type": "{ [_ in string]?: json$0.RawMessage }"
+            },
+            {
+              "name": "\"revision\"",
+              "optional": false,
+              "type": "number"
+            }
+          ]
+        },
         {
           "kind": "class",
           "name": "RunPreview",
@@ -7852,6 +7939,22 @@
         },
         {
           "kind": "class",
+          "name": "OnlineServiceSettings",
+          "fields": [
+            {
+              "name": "\"hubURL\"",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "\"registryURL\"",
+              "optional": false,
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "kind": "class",
           "name": "PanelDisplaySettings",
           "fields": [
             {
@@ -7885,6 +7988,11 @@
           "kind": "class",
           "name": "Settings",
           "fields": [
+            {
+              "name": "\"onlineServices\"",
+              "optional": false,
+              "type": "OnlineServiceSettings"
+            },
             {
               "name": "\"ui\"",
               "optional": false,
@@ -9687,6 +9795,11 @@
           "name": "BundleInfoView",
           "fields": [
             {
+              "name": "\"publishedSourceHash\"",
+              "optional": false,
+              "type": "artifact$0.Digest"
+            },
+            {
               "name": "\"panels\"",
               "optional": false,
               "type": "BundlePanelView[]"
@@ -10800,6 +10913,11 @@
           "name": "AddStateVariableCommand",
           "fields": [
             {
+              "name": "\"parameter\"",
+              "optional": true,
+              "type": "schema$0.Parameter | null"
+            },
+            {
               "name": "\"name\"",
               "optional": false,
               "type": "string"
@@ -10994,6 +11112,11 @@
           "name": "Command",
           "fields": [
             {
+              "name": "\"setWorkflowTargets\"",
+              "optional": true,
+              "type": "SetWorkflowTargetsCommand | null"
+            },
+            {
               "name": "\"kind\"",
               "optional": false,
               "type": "CommandKind"
@@ -11022,6 +11145,11 @@
               "name": "\"addStateVariable\"",
               "optional": true,
               "type": "AddStateVariableCommand | null"
+            },
+            {
+              "name": "\"setParameterBlocks\"",
+              "optional": true,
+              "type": "SetParameterBlocksCommand | null"
             },
             {
               "name": "\"updateStateVariable\"",
@@ -11217,6 +11345,14 @@
             {
               "name": "CommandAddStateVariable",
               "value": "\"add-state-variable\""
+            },
+            {
+              "name": "CommandSetWorkflowTargets",
+              "value": "\"set-workflow-targets\""
+            },
+            {
+              "name": "CommandSetParameterBlocks",
+              "value": "\"set-parameter-blocks\""
             },
             {
               "name": "CommandUpdateStateVariable",
@@ -11729,6 +11865,17 @@
         },
         {
           "kind": "class",
+          "name": "SetParameterBlocksCommand",
+          "fields": [
+            {
+              "name": "\"blocks\"",
+              "optional": false,
+              "type": "schema$0.ParameterBlock[]"
+            }
+          ]
+        },
+        {
+          "kind": "class",
           "name": "SetTargetDefaultCommand",
           "fields": [
             {
@@ -11740,6 +11887,17 @@
               "name": "\"slot\"",
               "optional": false,
               "type": "string"
+            }
+          ]
+        },
+        {
+          "kind": "class",
+          "name": "SetWorkflowTargetsCommand",
+          "fields": [
+            {
+              "name": "\"targets\"",
+              "optional": false,
+              "type": "schema$0.WorkflowTarget[]"
             }
           ]
         },
@@ -11778,6 +11936,16 @@
           "kind": "class",
           "name": "UpdateStateVariableCommand",
           "fields": [
+            {
+              "name": "\"parameter\"",
+              "optional": true,
+              "type": "schema$0.Parameter | null"
+            },
+            {
+              "name": "\"clearParameter\"",
+              "optional": true,
+              "type": "boolean"
+            },
             {
               "name": "\"name\"",
               "optional": false,
@@ -12699,6 +12867,130 @@
         },
         {
           "kind": "class",
+          "name": "Parameter",
+          "fields": [
+            {
+              "name": "\"id\"",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "\"label\"",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "\"description\"",
+              "optional": true,
+              "type": "string"
+            },
+            {
+              "name": "\"group\"",
+              "optional": true,
+              "type": "string"
+            },
+            {
+              "name": "\"order\"",
+              "optional": true,
+              "type": "number"
+            },
+            {
+              "name": "\"control\"",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "\"options\"",
+              "optional": true,
+              "type": "ParameterOption[]"
+            },
+            {
+              "name": "\"minimum\"",
+              "optional": true,
+              "type": "number | null"
+            },
+            {
+              "name": "\"maximum\"",
+              "optional": true,
+              "type": "number | null"
+            },
+            {
+              "name": "\"required\"",
+              "optional": true,
+              "type": "boolean"
+            },
+            {
+              "name": "\"visibleWhen\"",
+              "optional": true,
+              "type": "ParameterCondition | null"
+            }
+          ]
+        },
+        {
+          "kind": "class",
+          "name": "ParameterBlock",
+          "fields": [
+            {
+              "name": "\"description\"",
+              "optional": true,
+              "type": "string"
+            },
+            {
+              "name": "\"id\"",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "\"kind\"",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "\"label\"",
+              "optional": true,
+              "type": "string"
+            },
+            {
+              "name": "\"order\"",
+              "optional": true,
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "kind": "class",
+          "name": "ParameterCondition",
+          "fields": [
+            {
+              "name": "\"parameterId\"",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "\"equals\"",
+              "optional": false,
+              "type": "json$0.RawMessage"
+            }
+          ]
+        },
+        {
+          "kind": "class",
+          "name": "ParameterOption",
+          "fields": [
+            {
+              "name": "\"label\"",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "\"value\"",
+              "optional": false,
+              "type": "json$0.RawMessage"
+            }
+          ]
+        },
+        {
+          "kind": "class",
           "name": "Position",
           "fields": [
             {
@@ -12791,6 +13083,32 @@
         },
         {
           "kind": "class",
+          "name": "Variable",
+          "fields": [
+            {
+              "name": "\"parameter\"",
+              "optional": true,
+              "type": "Parameter | null"
+            },
+            {
+              "name": "\"name\"",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "\"type\"",
+              "optional": false,
+              "type": "datatype$0.TypeExpression"
+            },
+            {
+              "name": "\"default\"",
+              "optional": false,
+              "type": "json$0.RawMessage"
+            }
+          ]
+        },
+        {
+          "kind": "class",
           "name": "WorkflowResource",
           "fields": [
             {
@@ -12837,6 +13155,37 @@
               "name": "\"inputClip\"",
               "optional": true,
               "type": "InputClipResource | null"
+            }
+          ]
+        },
+        {
+          "kind": "class",
+          "name": "WorkflowTarget",
+          "fields": [
+            {
+              "name": "\"id\"",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "\"name\"",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "\"description\"",
+              "optional": true,
+              "type": "string"
+            },
+            {
+              "name": "\"kind\"",
+              "optional": false,
+              "type": "string"
+            },
+            {
+              "name": "\"default\"",
+              "optional": true,
+              "type": "boolean"
             }
           ]
         }

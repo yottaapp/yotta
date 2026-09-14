@@ -312,9 +312,21 @@
             />
             <div class="min-w-0">
               <div class="flex min-w-0 items-center gap-2">
-                <span class="truncate text-sm font-medium text-highlighted">
-                  {{ source.name }}
-                </span>
+                <button
+                  class="flex min-w-0 items-center gap-2 text-left text-sm font-medium text-highlighted"
+                  :aria-expanded="Boolean(expandedParameters[source.workflowId])"
+                  @click="toggleParameters(source.workflowId)"
+                  @dblclick.stop="openWorkflow(source.workflowId)"
+                >
+                  <UIcon
+                    :name="
+                      expandedParameters[source.workflowId]
+                        ? 'i-tabler-chevron-down'
+                        : 'i-tabler-chevron-right'
+                    "
+                    class="size-4 shrink-0 text-muted"
+                  /><span class="truncate">{{ source.name }}</span>
+                </button>
                 <UBadge
                   v-if="runFeedbackById[source.workflowId]"
                   :color="runFeedbackById[source.workflowId].tone"
@@ -385,6 +397,15 @@
             </time>
             <div class="flex justify-end gap-1" @dblclick.stop>
               <UButton
+                icon="i-tabler-adjustments-horizontal"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                :aria-label="t('workflow.parameters.run_title')"
+                @click="toggleParameters(source.workflowId)"
+                :aria-expanded="Boolean(expandedParameters[source.workflowId])"
+              />
+              <UButton
                 v-if="activeRunIdByWorkflow[source.workflowId]"
                 data-testid="workflow-stop"
                 icon="i-tabler-square"
@@ -406,7 +427,7 @@
                 :aria-label="t('workflow.action.run_named', { name: source.name })"
                 :loading="runStartingId === source.workflowId"
                 :disabled="Boolean(runStartingId) || deleting"
-                @click="runWorkflow(source.workflowId)"
+                @click="runFromRow(source.workflowId)"
               />
               <UDropdownMenu :items="rowMenuItems(source)">
                 <UButton
@@ -419,6 +440,25 @@
                 />
               </UDropdownMenu>
             </div>
+            <WorkflowParameterInline
+              v-if="visitedParameters[source.workflowId]"
+              :ref="
+                (el) => {
+                  if (el)
+                    parameterForms.set(
+                      source.workflowId,
+                      el as unknown as { run: () => Promise<void> },
+                    )
+                  else parameterForms.delete(source.workflowId)
+                }
+              "
+              v-model:open="expandedParameters[source.workflowId]"
+              class="col-span-full -mx-3 -mb-2"
+              :workflow-id="source.workflowId"
+              :source-revision="source.revision"
+              :name="source.name"
+              @run="runWorkflow"
+            />
           </article>
         </div>
       </div>
@@ -928,6 +968,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkflowParameterInline from '@/components/workflow/WorkflowParameterInline.vue'
 import WorkflowMarketIcon from '@/components/workflow/WorkflowMarketIcon.vue'
 import {
   computed,
@@ -1078,6 +1119,18 @@ const metadataModalOpen = ref(false)
 const metadataBusy = ref(false)
 const metadataFailure = ref('')
 const editingSource = ref<SourceView | null>(null)
+const expandedParameters = reactive<Record<string, boolean>>({})
+const visitedParameters = reactive<Record<string, boolean>>({})
+const parameterForms = new Map<string, { run: () => Promise<void> }>()
+function toggleParameters(id: string) {
+  visitedParameters[id] = true
+  expandedParameters[id] = !expandedParameters[id]
+}
+function runFromRow(id: string) {
+  const form = parameterForms.get(id)
+  if (form) void form.run()
+  else void runWorkflow(id)
+}
 const createdCategories = ref<string[]>([])
 const createdTags = ref<string[]>([])
 const metadataDraft = reactive({

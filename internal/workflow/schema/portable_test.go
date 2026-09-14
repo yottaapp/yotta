@@ -149,7 +149,7 @@ func portableSourceForTest() string {
 	manifestDigest := strings.Repeat("2", 64)
 	blobDigest := strings.Repeat("3", 64)
 	return fmt.Sprintf(`{
-		"format":"yotta.workflow","version":"1",
+		"format":"yotta.workflow","version":"5",
 		"workflow":{"id":"wf-portable","name":"Portable"},"revision":0,"entryGraph":"main",
 		"graphs":[{"id":"main","kind":"main","nodes":[{
 			"id":"playback","nodeRef":{"nodeTypeId":"https://schemas.example.test/publishers/acme/nodes/playback","version":"1.0.0","semanticDigest":"sha256:%s"},

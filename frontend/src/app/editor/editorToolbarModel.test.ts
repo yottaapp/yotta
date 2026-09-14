@@ -43,7 +43,6 @@ describe('editor toolbar command hierarchy', () => {
       'toggle-inspector',
       'check-workflow',
       'start-debug',
-      'settings',
       'reload',
     ])
   })

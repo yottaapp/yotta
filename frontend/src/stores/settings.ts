@@ -28,6 +28,7 @@ export interface LauncherBlock {
 
 // 跟 Go services.Settings 当前公开 DTO 对齐；retired 开发期字段不在前端保留兼容镜像。
 export interface Settings {
+  onlineServices?: { hubURL: string; registryURL: string }
   ui: {
     panelDisplay?: {
       width: number
