@@ -1146,7 +1146,6 @@ const latestSubmission = ref<{ submissionId: string; status: string; reason: str
 const salesDraft = ref<SalesDraft>({
   paid: false,
   price: '',
-  licenseRef: '',
   revision: 0,
   available: true,
   configured: false,
@@ -1624,7 +1623,6 @@ function initializePublish(source: SourceView): void {
   Object.assign(salesDraft.value, {
     paid: false,
     price: '',
-    licenseRef: '',
     revision: 0,
     available: true,
     configured: false,
@@ -1681,7 +1679,6 @@ function initializePublish(source: SourceView): void {
         Object.assign(salesDraft.value, {
           paid: sales.priceCents > 0,
           price: (sales.priceCents / 100).toFixed(2),
-          licenseRef: sales.licenseRef,
           revision: history.sales?.revision || 0,
           available: sales.available,
           configured: !!history.sales,

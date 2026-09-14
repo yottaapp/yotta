@@ -11,7 +11,6 @@ type WorkflowSales struct {
 	PriceCents int64  `json:"priceCents"`
 	Currency   string `json:"currency"`
 	Available  bool   `json:"available"`
-	LicenseRef string `json:"licenseRef"`
 	Revision   int64  `json:"revision"`
 }
 

@@ -7,11 +7,10 @@ import WorkflowPublicationPricing from './WorkflowPublicationPricing.vue'
 import WorkflowPublicationStatus from './WorkflowPublicationStatus.vue'
 
 describe('workflow publication UI', () => {
-  it('shows first-upload paid fields and accepts price and terms', async () => {
+  it('accepts paid pricing without a terms input', async () => {
     const draft = ref<SalesDraft>({
       paid: false,
       price: '',
-      licenseRef: '',
       revision: 0,
       available: true,
       configured: false,
@@ -32,10 +31,7 @@ describe('workflow publication UI', () => {
     expect(host.querySelector('[data-testid="publication-price"]')).toBeNull()
     draft.value.paid = true
     await nextTick()
-    for (const [testId, value] of [
-      ['publication-price', '12.34'],
-      ['publication-license', 'https://creator.example/terms'],
-    ]) {
+    for (const [testId, value] of [['publication-price', '12.34']]) {
       const input = host.querySelector<HTMLInputElement>(`[data-testid="${testId}"]`)!
       input.value = value!
       input.dispatchEvent(new Event('input'))
@@ -44,8 +40,8 @@ describe('workflow publication UI', () => {
     expect(draft.value).toMatchObject({
       paid: true,
       price: '12.34',
-      licenseRef: 'https://creator.example/terms',
     })
+    expect(host.querySelector('[data-testid="publication-license"]')).toBeNull()
     app.unmount()
     host.remove()
   })

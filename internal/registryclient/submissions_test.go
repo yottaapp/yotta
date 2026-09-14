@@ -10,7 +10,7 @@ import (
 )
 
 func TestPaidPublicationAndCreatorSubmissionContract(t *testing.T) {
-	sales := WorkflowSales{PriceCents: 1234, Currency: "CNY", Available: true, LicenseRef: "https://creator.example/terms", Revision: 0}
+	sales := WorkflowSales{PriceCents: 1234, Currency: "CNY", Available: true, Revision: 0}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer user-token" {
 			t.Error("missing creator token")

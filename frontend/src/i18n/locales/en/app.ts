@@ -922,7 +922,7 @@ export default {
       'The order state changed. Retry to check the existing order; no new order will be created.',
     'workflow.registry.purchase_required':
       'Purchase this workflow first. If already purchased, sign in with the buyer account and retry installation.',
-    'workflow.registry.invalid_sales': 'Check the price and terms of use, then submit again.',
+    'workflow.registry.invalid_sales': 'Check the price and sales settings, then submit again.',
     'workflow.registry.sales_changed':
       'Sales settings changed. Reopen the submission form to load the latest settings.',
     'workflow.registry.submission_pending':

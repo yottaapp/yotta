@@ -28,30 +28,12 @@
         :disabled="disabled"
       />
     </UFormField>
-    <UFormField
-      v-if="draft.paid || draft.configured"
-      :label="t('workflow.market.license_terms')"
-      required
-      :help="t('workflow.market.license_terms_hint')"
-      :error="
-        draft.licenseRef && !validLicenseRef(draft.licenseRef)
-          ? t('workflow.market.invalid_license_terms')
-          : undefined
-      "
-    >
-      <UInput
-        v-model="draft.licenseRef"
-        data-testid="publication-license"
-        class="w-full"
-        :disabled="disabled"
-      />
-    </UFormField>
   </div>
 </template>
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { priceCents, validLicenseRef, type SalesDraft } from '@/lib/publication'
+import { priceCents, type SalesDraft } from '@/lib/publication'
 const draft = defineModel<SalesDraft>({ required: true })
 defineProps<{ disabled: boolean }>()
 const { t } = useI18n()

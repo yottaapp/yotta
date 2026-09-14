@@ -39,6 +39,15 @@ func TestPublicationProjectsReviewAndValidatesSales(t *testing.T) {
 	if apperr.From(err).ID != "workflow.registry.invalid_sales" {
 		t.Fatalf("err = %v", err)
 	}
+	_, err = s.PublishSourceToRegistry(context.Background(), PublishRegistryRequest{
+		Sales:          &registryclient.WorkflowSales{PriceCents: 100, Currency: "CNY", Available: true},
+		ReleaseVersion: "1.0.0",
+		Title:          "Paid workflow",
+		Summary:        "Paid workflow summary",
+	})
+	if apperr.From(err).ID == "workflow.registry.invalid_sales" {
+		t.Fatalf("paid sales unexpectedly require author terms: %v", err)
+	}
 	for _, code := range []string{"submission_pending", "idempotency_conflict", "review_required"} {
 		err := registryError("publish", registryclient.Problem{Code: "registry." + code})
 		if apperr.From(err).ID != "workflow.registry."+code {

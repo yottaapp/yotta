@@ -6196,11 +6196,6 @@
               "type": "boolean"
             },
             {
-              "name": "\"licenseRef\"",
-              "optional": false,
-              "type": "string"
-            },
-            {
               "name": "\"revision\"",
               "optional": false,
               "type": "number"

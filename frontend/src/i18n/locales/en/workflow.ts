@@ -421,9 +421,6 @@ export default {
       price_cny: 'Price (CNY)',
       invalid_price:
         'Enter a positive amount with up to two decimal places, at most CNY 21,474,836.47.',
-      license_terms: 'Terms of use',
-      invalid_license_terms: 'The terms reference is too long. Use a shorter URL or name.',
-      license_terms_hint: 'Enter the terms URL or name that applies to buyers.',
       submission_pending: 'Submitted for review',
       pending_review_hint:
         'The workflow will be listed after approval. Track progress in My submissions. Another submission cannot be made while review is pending.',

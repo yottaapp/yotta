@@ -92,7 +92,7 @@ type PublishRegistryRequest struct {
 func (s *Service) PublishSourceToRegistry(
 	ctx context.Context, request PublishRegistryRequest,
 ) (RegistryWorkflowReleaseView, error) {
-	if sales := request.Sales; sales != nil && (sales.PriceCents < 0 || sales.PriceCents > 2147483647 || sales.Currency != "CNY" || strings.TrimSpace(sales.LicenseRef) == "" || len(sales.LicenseRef) > 500 || sales.Revision < 0) {
+	if sales := request.Sales; sales != nil && (sales.PriceCents < 0 || sales.PriceCents > 2147483647 || sales.Currency != "CNY" || sales.Revision < 0) {
 		return RegistryWorkflowReleaseView{}, projectError("workflow.registry.invalid_sales", apperr.CategoryValidation, nil, false, errors.New("invalid publication sales"))
 	}
 	if n := utf8.RuneCountInString(strings.TrimSpace(request.Title)); n < 1 || n > 160 {

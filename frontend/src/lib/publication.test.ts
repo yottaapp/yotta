@@ -1,11 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  priceCents,
-  publicationSales,
-  publicationVersion,
-  validSalesDraft,
-  type SalesDraft,
-} from './publication'
+import { priceCents, publicationSales, publicationVersion, type SalesDraft } from './publication'
 describe('publication sales', () => {
   it('allows rejected versions to be corrected without consuming another version', () => {
     expect(publicationVersion('', '1.0.0')).toBe('1.0.0')
@@ -20,11 +14,10 @@ describe('publication sales', () => {
       expect(priceCents(value)).toBeNull()
     expect(priceCents('21474836.47')).toBe(2147483647)
   })
-  it('submits paid terms on first upload and preserves current revision', () => {
+  it('submits paid pricing and preserves current revision', () => {
     const draft: SalesDraft = {
       paid: true,
       price: '12.34',
-      licenseRef: 'terms',
       revision: 0,
       available: true,
       configured: false,
@@ -32,12 +25,9 @@ describe('publication sales', () => {
     expect(publicationSales(draft)).toEqual({
       priceCents: 1234,
       currency: 'CNY',
-      licenseRef: 'terms',
       revision: 0,
       available: true,
     })
-    expect(validSalesDraft({ ...draft, licenseRef: '' })).toBe(false)
-    expect(validSalesDraft({ ...draft, licenseRef: '中'.repeat(167) })).toBe(false)
     expect(publicationSales({ ...draft, paid: false })).toBeUndefined()
     expect(
       publicationSales({ ...draft, paid: false, configured: true, revision: 5 }),

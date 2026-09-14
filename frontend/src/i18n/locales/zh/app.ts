@@ -790,7 +790,7 @@ export default {
     'workflow.wallet.storage_unavailable': '无法保存付款授权，请检查系统凭据存储后重试。',
     'workflow.checkout.order_changed': '订单状态已变化，请重试查询当前订单；不会重新下单。',
     'workflow.registry.purchase_required': '请先购买此工作流；已购买时请登录购买账户，再重试安装。',
-    'workflow.registry.invalid_sales': '请检查价格和使用条款后重新提交。',
+    'workflow.registry.invalid_sales': '请检查价格和销售设置后重新提交。',
     'workflow.registry.sales_changed': '销售设置已更新，请重新打开投稿表单获取最新设置。',
     'workflow.registry.submission_pending': '此作品已有待审核投稿，请在“我的投稿”查看进度。',
     'workflow.registry.idempotency_conflict': '投稿内容已变化，请重新打开投稿表单后提交。',

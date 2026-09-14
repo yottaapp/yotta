@@ -8,7 +8,6 @@ export function publicationVersion(published: string, rejected?: string): string
 export interface SalesDraft {
   paid: boolean
   price: string
-  licenseRef: string
   revision: number
   available: boolean
   configured: boolean
@@ -23,11 +22,7 @@ export function priceCents(price: string): number | null {
 
 export function validSalesDraft(draft: SalesDraft): boolean {
   if (!draft.paid && !draft.configured) return true
-  return (!draft.paid || priceCents(draft.price) !== null) && validLicenseRef(draft.licenseRef)
-}
-
-export function validLicenseRef(value: string): boolean {
-  return value.trim().length > 0 && new TextEncoder().encode(value.trim()).length <= 500
+  return !draft.paid || priceCents(draft.price) !== null
 }
 
 export function publicationSales(draft: SalesDraft) {
@@ -37,7 +32,6 @@ export function publicationSales(draft: SalesDraft) {
     priceCents: draft.paid ? priceCents(draft.price)! : 0,
     currency: 'CNY',
     available: draft.available,
-    licenseRef: draft.licenseRef.trim(),
     revision: draft.revision,
   }
 }
